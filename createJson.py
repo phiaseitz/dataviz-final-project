@@ -31,8 +31,6 @@ for row in rows[1:]:
 			latLongArray = [float(loc) for loc in latLongArray]
 		except:
 			latLongArray = ["",""]
-	
-	print(latLongs)
 
 	hospitalDict[hospital] = {
 		"Address": address,
@@ -52,7 +50,6 @@ surveyHeadingsDict = dict()
 for i,heading in enumerate(headings):
 	surveyHeadingsDict[heading] = i
 
-print surveyHeadingsDict
 for row in rows[1:]:
 	question = row[surveyHeadingsDict["HCAHPS Measure ID"]]
 	if (question == "H_STAR_RATING"):
@@ -64,6 +61,35 @@ for row in rows[1:]:
 				"StarRating": row[surveyHeadingsDict["Patient Survey Star Rating"]]
 			}
 
+#Get the survey respons for each hospital
+readmissionDeathsFile = "./csv_data/Readmissions and Deaths - Hospital.csv"
+
+with open(readmissionDeathsFile, 'rb') as csvfile:
+	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+	rows = list(reader)
+
+headings = rows[0]
+readmissionDeathsHeadingsDict = dict()
+for i,heading in enumerate(headings):
+	readmissionDeathsHeadingsDict[heading] = i
+
+for row in rows[1:]:
+	hospital = row[surveyHeadingsDict["Hospital Name"]]
+	measure = row[readmissionDeathsHeadingsDict["Measure ID"]]
+	score = row[readmissionDeathsHeadingsDict["Score"]]
+
+	print measure,score
+	if (hospital in hospitalDict):
+		if ("QualityMeasures" in hospitalDict[hospital]):
+			hospitalDict[hospital]["QualityMeasures"][measure] = score
+		else:
+			hospitalDict[hospital]["QualityMeasures"] = {measure: score}
+	else:
+		hospitalDict[hospital] = {
+			"QualityMeasures": {measure: score}
+		}
+
+#Write Everything into a Json file!
 hospitalJSONList = hospitalDict.values()
 
 
