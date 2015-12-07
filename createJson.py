@@ -104,6 +104,34 @@ for row in rows[1:]:
 			"ReadmissionsAndDeaths": {measure: score}
 		}
 
+#Get the survey respons for each hospital
+paymentFile = "./csv_data/Payment and Value of Care - Hospital.csv"
+
+with open(paymentFile, 'rb') as csvfile:
+	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+	rows = list(reader)
+
+headings = rows[0]
+paymentHeadingsDict = dict()
+for i,heading in enumerate(headings):
+	paymentHeadingsDict[heading] = i
+
+print paymentHeadingsDict
+for row in rows[1:]:
+	hospital = row[paymentHeadingsDict["Hospital name"]]
+	measure = row[paymentHeadingsDict["Payment measure ID"]]
+	payment = row[paymentHeadingsDict["Payment"]]
+
+	if (hospital in hospitalDict):
+		if ("Payment" in hospitalDict[hospital]):
+			hospitalDict[hospital]["Payment"][measure] = payment
+		else:
+			hospitalDict[hospital]["Payment"] = {measure: payment}
+	else:
+		hospitalDict[hospital] = {
+			"Payment": {measure: payment}
+		}
+
 #Write Everything into a Json file!
 hospitalJSONList = hospitalDict.values()
 
