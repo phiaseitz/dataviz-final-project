@@ -1,43 +1,57 @@
 import csv
-
+import json
 
 #Get Hospital Address Data
 generalInfoFile = "./csv_data/Hospital General Information.csv"
 
 with open(generalInfoFile, 'rb') as csvfile:
-	reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 	rows = list(reader)
 
 headings = rows[0]
-print headings
-headingsDict = dict()
+generalHeadingsDict = dict()
 for i,heading in enumerate(headings):
-	print heading
-	print "hi"
-	cleanedHeading = heading.replace('"', '')
-	headingsDict[cleanedHeading] = i
+	generalHeadingsDict[heading] = i
 
 hospitalDict = dict()
 for row in rows:
-	print(len(row))
-	hospital = row[headingsDict["Hospital Name"]].replace('"', '')
-	address = {"Address": row[headingsDict["Address"]].replace('"', ''),
-		"City": row[headingsDict["City"]].replace('"', ''),
-		"State": row[headingsDict["State"]].replace('"', ''),
-		"ZIP": row[headingsDict["ZIP Code"]].replace('"', '')}
-	print(hospital)
-	print ', '.join(row)
+	hospital = row[generalHeadingsDict["Hospital Name"]]
+	address = {"Address": row[generalHeadingsDict["Address"]],
+		"City": row[generalHeadingsDict["City"]],
+		"State": row[generalHeadingsDict["State"]],
+		"ZIP": row[generalHeadingsDict["ZIP Code"]]}
 	hospitalDict[hospital] = {
-		"Address": address
+		"Address": address,
+		"Hospital": hospital,
 	}
+#Get the survey respons for each hospital
+surveyFile = "./csv_data/HCAHPS - Hospital.csv"
 
-hospitalJSONList = []
-for hospital in hospitalDict.keys():
-	hospitalJSONList.append({
-		"Hospital": hospital, 
-		"Address": hospitalDict[hospital]["Address"]
-	})
+with open(surveyFile, 'rb') as csvfile:
+	reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+	rows = list(reader)
 
-print hospitalJSONList
+headings = rows[0]
+surveyHeadingsDict = dict()
+for i,heading in enumerate(headings):
+	surveyHeadingsDict[heading] = i
+
+print surveyHeadingsDict
+for row in rows:
+	question = row[surveyHeadingsDict["HCAHPS Measure ID"]]
+	if (question == "H_STAR_RATING"):
+		hospital = row[surveyHeadingsDict["Hospital Name"]]
+		if (hospital in hospitalDict):
+			hospitalDict[hospital]["StarRating"] = row[surveyHeadingsDict["Patient Survey Star Rating"]]
+		else:
+			hospitalDict[hospital] = {
+				"StarRating": row[surveyHeadingsDict["Patient Survey Star Rating"]]
+			}
+
+hospitalJSONList = hospitalDict.values()
+
+
+with open('hospitalData.txt', 'w') as outfile:
+    json.dump(hospitalJSONList, outfile)
 
 
