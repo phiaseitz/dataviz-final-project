@@ -51,7 +51,7 @@ for row in rows:
 hospitalJSONList = hospitalDict.values()
 
 
-with open('hospitalData.txt', 'w') as outfile:
+with open('hospitalData.json', 'w') as outfile:
     json.dump(hospitalJSONList, outfile)
 
 
