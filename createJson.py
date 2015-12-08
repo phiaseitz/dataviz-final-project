@@ -77,7 +77,7 @@ for row in rows[1:]:
 				"StarRatings": {question: row[surveyHeadingsDict["Patient Survey Star Rating"]]}
 			}
 
-#Get the survey respons for each hospital
+#Get the survey response for each hospital
 readmissionDeathsFile = "./csv_data/Readmissions and Deaths - Hospital.csv"
 
 with open(readmissionDeathsFile, 'rb') as csvfile:
