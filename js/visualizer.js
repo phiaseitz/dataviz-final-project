@@ -5,10 +5,13 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   mapTypeId: google.maps.MapTypeId.HYBRID
 });
 
-// Load the station data. When the data comes back, create an overlay.
-d3.json("hospitalData.json", function(data) {
-  var overlay = new google.maps.OverlayView();
+const COLORS = d3.scale.linear()
+  .domain([0, 1])
+  .range(["black", "#cedb9c"]);
 
+// Load the hospital data. When the data comes back, create an overlay.
+d3.json("hospitalData.json", (data) => {
+  var overlay = new google.maps.OverlayView();
 
   // Add the container when the overlay is added to the map.
   overlay.onAdd = function() {
@@ -31,10 +34,13 @@ d3.json("hospitalData.json", function(data) {
 
       // Add a circle.
       marker.append("svg:circle")
-          .attr("r", 4.5)
-          .attr("cx", padding)
-          .attr("cy", padding)
-          .attr("id", function(d){return d.key;})
+          .attr({
+            r: 4.5,
+            cx: padding,
+            cy: padding,
+            fill: d => COLORS(evaluateCriteria(d.value, DEFAULT_CRITERIA)),
+            id: d => d.key,
+          })
           .on("mouseenter", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "visible");})
           .on("mouseleave", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "hidden");});
 
@@ -78,3 +84,75 @@ d3.json("hospitalData.json", function(data) {
   // Bind our overlay to the map…
   overlay.setMap(map);
 });
+
+const DEFAULT_CRITERIA = [
+  {
+    name: "Comfort",
+    weight: 1.0,
+    maxValue: 1,
+    value: d => evaluateCriteria(d["StarRatings"], [
+      {
+        // An individual question example: currently deactivated by its 0 weight
+        name: "Cleanliness",
+        weight: 0,
+        maxValue: 5,
+        value: d => d["H_CLEAN_STAR_RATING"],
+      },
+      {
+        name: "Overall Rating",
+        weight: 1.0,
+        maxValue: 5,
+        value: d => d["H_STAR_RATING"],
+      },
+    ]),
+  },
+];
+
+/**
+ * Given a datum and an array of criteria, evaluate the overall scoring of a
+ * hospital based on the criteria, accounting for weighting. Note that
+ *
+ * Criteria should be of the form:
+ * [
+ * 	{
+ * 		name: String,
+ * 		weight: Number,
+ * 		maxValue: Number,
+ * 		value: Function(datum) => Number,
+ * 	}, ...
+ * ]
+ *
+ * @param  {Object} datum    A hospital datum
+ * @param  {Array} criteria  An array of objects of the form described above
+ * @return {Number}          A 0-1 scoring of a hospital, based on the critera
+ */
+function evaluateCriteria(datum, criteria=DEFAULT_CRITERIA, verbose=false) {
+  // Short circuit if the data is evaluated
+  if (datum === undefined) return 0;
+
+  let weightsSum = 0;
+  let weightedValueSum = 0;
+
+  // Calculate the weighted sum of the criteria and keep
+  // track of the weights so that the value can be normalized
+  // from 0-1 later
+  criteria.forEach((c) => {
+    // Short circuit the for loop if the data cannot be cast
+    if(isNaN(c.value(datum))) return 0;
+
+    weightedValueSum += (c.value(datum) / c.maxValue) * c.weight;
+    weightsSum += c.weight;
+  });
+
+  // Optionally display console output for debugging
+  if (verbose) {
+    console.log(datum)
+    console.log("weightedValueSum: ", weightedValueSum)
+    console.log("weightSum: ", weightsSum)
+    console.log("value: ", weightedValueSum / weightsSum)
+    console.log("---")
+  }
+
+  // Normalize the weighted sum of the values from 0-1 and return
+  return weightedValueSum / weightsSum;
+}
