@@ -20,3 +20,12 @@ html, body, #map {
   stroke: black;
   stroke-width: 1.5px;
 }
+
+#tooltip {
+  position: absolute;
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #111;
+  background-color: rgba(255, 255, 255, .9);
+  padding: 2px;
+  text-transform: capitalize;
+}

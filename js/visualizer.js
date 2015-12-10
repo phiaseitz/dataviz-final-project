@@ -34,26 +34,35 @@ d3.json("hospitalData.json", (data) => {
 
       // Add a circle.
       marker.append("svg:circle")
-          .attr({
-            r: 4.5,
-            cx: padding,
-            cy: padding,
-            fill: d => COLORS(evaluateCriteria(d.value, hospitalCriteria)),
-            id: d => d.key,
-          })
-          .on("mouseenter", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "visible");})
-          .on("mouseleave", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "hidden");});
+        .attr({
+          r: 6,
+          cx: padding,
+          cy: padding,
+          fill: d => COLORS(evaluateCriteria(d.value, hospitalCriteria)),
+          id: d => d.key,
+        })
+        .on("mouseenter", function (d) {
+          const circle = d3.select(this);
 
-      // Add a label.
-      var tooltip = marker.append("svg:text")
-          .attr("x", padding + 7)
-          .attr("y", padding)
-          .attr("dy", ".31em")
-          .attr("id", function(d){return "tip"+ d.key;})
-          .style("background", "white")
-          .style("font-weight","bold")
-          .style("visibility", "hidden")
-          .text(function(d) { return d.value["Hospital"]; });
+          d3.select("#tooltip")
+            .style({display: "initial"})
+            .style({
+              left: circle[0][0].offsetParent.offsetLeft + 20 + "px",
+              top: circle[0][0].offsetParent.offsetTop + "px",
+            })
+            .text(d.value["Hospital"].toLowerCase());
+
+          // Increase circle radius
+          d3.select(this).attr("r", 8);
+        })
+        .on("mouseleave", function (d) {
+          // Make tooltip invisible
+          d3.select("#tooltip")
+            .style("display", "none");
+
+          // Restore circle radius
+          d3.select(this).attr("r", 6);
+        });
 
 
       function transform(d) {
