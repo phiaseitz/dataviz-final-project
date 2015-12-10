@@ -38,7 +38,7 @@ d3.json("hospitalData.json", (data) => {
             r: 4.5,
             cx: padding,
             cy: padding,
-            fill: d => COLORS(evaluateCriteria(d.value, DEFAULT_CRITERIA)),
+            fill: d => COLORS(evaluateCriteria(d.value, hospitalCriteria)),
             id: d => d.key,
           })
           .on("mouseenter", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "visible");})
@@ -85,7 +85,7 @@ d3.json("hospitalData.json", (data) => {
   overlay.setMap(map);
 });
 
-const DEFAULT_CRITERIA = [
+const hospitalCriteria = [
   {
     name: "Comfort",
     weight: 1.0,
@@ -126,7 +126,7 @@ const DEFAULT_CRITERIA = [
  * @param  {Array} criteria  An array of objects of the form described above
  * @return {Number}          A 0-1 scoring of a hospital, based on the critera
  */
-function evaluateCriteria(datum, criteria=DEFAULT_CRITERIA, verbose=false) {
+function evaluateCriteria(datum, criteria=hospitalCriteria, verbose=false) {
   // Short circuit if the data is evaluated
   if (datum === undefined) return 0;
 
