@@ -3,6 +3,8 @@ html, body, #map {
   height: 100%;
   margin: 0;
   padding: 0;
+  position: absolute;
+  overflow: hidden;
 }
 
 .hospitals, .hospitals svg {
@@ -19,4 +21,44 @@ html, body, #map {
 .hospitals circle {
   stroke: black;
   stroke-width: 1.5px;
+}
+
+.sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30vw;
+  background-color: rgba(255, 255, 255, 0.95);
+  transition: transform 0.3s ease-in-out;
+}
+
+#detailSidebar {
+  left: -30vw;
+}
+
+#detailSidebar.show {
+  transform: translateX(30vw);
+}
+
+#settingsSidebar {
+  right: -30vw;
+}
+
+#settingsSidebar.show {
+  transform: translateX(-30vw);
+}
+
+#settingsTabButton {
+  position: relative;
+  top: 100px;
+  left: -95px;
+  height: 40px;
+  width: 150px;
+  transform: rotateZ(270deg);
+  background-color: white;
+  outline: none;
+  border: none;
+
+  font-family: "Source Sans Pro", sans-serif;
+  text-transform: uppercase;
 }

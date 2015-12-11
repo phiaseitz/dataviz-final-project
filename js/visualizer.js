@@ -42,7 +42,8 @@ d3.json("hospitalData.json", (data) => {
             id: d => d.key,
           })
           .on("mouseenter", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "visible");})
-          .on("mouseleave", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "hidden");});
+          .on("mouseleave", function(){return d3.select("#tip"+d3.select(this).attr("id")).style("visibility", "hidden");})
+          .on("click", d => showDetails(d.value));
 
       // Add a label.
       var tooltip = marker.append("svg:text")
@@ -155,4 +156,8 @@ function evaluateCriteria(datum, criteria=hospitalCriteria, verbose=false) {
 
   // Normalize the weighted sum of the values from 0-1 and return
   return weightedValueSum / weightsSum;
+}
+
+function showDetails(hospitalDatum) {
+  console.log(hospitalDatum);
 }

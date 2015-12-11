@@ -9,7 +9,22 @@
     <link rel="stylesheet" type="text/css" href="css/main.css">
   </head>
   <body>
+
+
     <div id="map"></div>
+
+    <!-- Detail Sidebar, Left Side -->
+    <aside id="detailSidebar" class="sidebar">
+    </aside>
+
+    <!-- Settings Sidebar, Right Side -->
+    <aside id="settingsSidebar" class="sidebar">
+      <button id="settingsTabButton"
+        onclick="var t = d3.select('#settingsSidebar'); t.classed('show', !t.classed('show')); ">
+        Settings
+      </button>
+    </aside>
+
     <script type="text/babel" src="js/visualizer.js"></script>
   </body>
 </html>
