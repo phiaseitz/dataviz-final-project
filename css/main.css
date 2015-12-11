@@ -17,7 +17,6 @@ html, body, #map {
 }
 
 .hospitals circle {
-  fill: brown;
   stroke: black;
   stroke-width: 1.5px;
 }
