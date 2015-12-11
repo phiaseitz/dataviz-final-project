@@ -15,13 +15,19 @@
 
     <!-- Detail Sidebar, Left Side -->
     <aside id="detailSidebar" class="sidebar">
+      <div class="align-content-right">
+        <button id="closeDetails"
+          onclick="d3.select('#detailSidebar').classed('show', false)">
+          [X]
+        </button>
+      </div>
     </aside>
 
     <!-- Settings Sidebar, Right Side -->
     <aside id="settingsSidebar" class="sidebar">
       <button id="settingsTabButton"
         onclick="var t = d3.select('#settingsSidebar'); t.classed('show', !t.classed('show')); ">
-        Settings
+        [ Settings ]
       </button>
     </aside>
 

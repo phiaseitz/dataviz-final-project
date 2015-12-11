@@ -159,5 +159,8 @@ function evaluateCriteria(datum, criteria=hospitalCriteria, verbose=false) {
 }
 
 function showDetails(hospitalDatum) {
-  console.log(hospitalDatum);
+  const sidebar = d3.select('#detailSidebar');
+  sidebar.classed('show', true);
+
+  
 }

@@ -48,6 +48,13 @@ html, body, #map {
   transform: translateX(-30vw);
 }
 
+button {
+  font-family: monospace;
+  text-transform: uppercase;
+  outline: none;
+  border: none;
+}
+
 #settingsTabButton {
   position: relative;
   top: 100px;
@@ -56,9 +63,21 @@ html, body, #map {
   width: 150px;
   transform: rotateZ(270deg);
   background-color: white;
-  outline: none;
-  border: none;
+}
 
-  font-family: "Source Sans Pro", sans-serif;
-  text-transform: uppercase;
+.align-content-right {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#closeDetails {
+  background: none;
+  font-size: 30px;
+  color: #555;
+  margin: 5px;
+}
+
+#closeDetails:hover {
+  color:#222;
 }
