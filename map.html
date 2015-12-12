@@ -14,6 +14,36 @@
     <div id="map"></div>
     <div id="tooltip"></div>
 
+    <!-- Detail Sidebar, Left Side -->
+    <aside id="detailSidebar" class="sidebar">
+      <div class="align-content-right">
+        <button id="closeDetails"
+          onclick="d3.select('#detailSidebar').classed('show', false)">
+          [X]
+        </button>
+      </div>
+      <div class="sidebarContent">
+        <h3 id="hospitalNameField"></h3>
+        <h4 id="addressHeader">Address</h4>
+        <div id="addressBlock">
+          <div id="addressField"></div>
+          <div>
+            <span id="cityField"></span>,
+            <span id="stateField"></span>
+            <span id="zipField"></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Settings Sidebar, Right Side -->
+    <aside id="settingsSidebar" class="sidebar">
+      <button id="settingsTabButton"
+        onclick="var t = d3.select('#settingsSidebar'); t.classed('show', !t.classed('show')); ">
+        [ Settings ]
+      </button>
+    </aside>
+
     <script type="text/babel" src="js/visualizer.js"></script>
   </body>
 </html>
