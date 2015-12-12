@@ -96,6 +96,7 @@ const COLORS = d3.scale.linear()
   .domain([0, 1])
   .range(["black", "#cedb9c"]);
 
+//The Human-Readable translations of the code names. 
 const CODEKEY = {
   StarRatings: {
     H_STAR_RATING: "Summary Star Rating", 
