@@ -6,12 +6,13 @@
     <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?1.29.1"></script>
     <script src="js/babel.min.js" charset="utf-8"></script>
     <script src="js/_.min.js" charset="utf-8"></script>
+
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="css/main.css">
   </head>
   <body>
-
-
     <div id="map"></div>
+    <div id="tooltip"></div>
 
     <!-- Detail Sidebar, Left Side -->
     <aside id="detailSidebar" class="sidebar">
@@ -23,7 +24,7 @@
       </div>
       <div class="sidebarContent">
         <h3 id="hospitalNameField"></h3>
-        <h4>Address</h4>
+        <h4 id="addressHeader">Address</h4>
         <div id="addressBlock">
           <div id="addressField"></div>
           <div>
