@@ -30,6 +30,9 @@ html, body, #map {
   width: 30vw;
   background-color: rgba(255, 255, 255, 0.95);
   transition: transform 0.3s ease-in-out;
+  padding: 10px;
+  box-sizing: border-box;
+  text-transform: capitalize;
 }
 
 #detailSidebar {
@@ -48,6 +51,14 @@ html, body, #map {
   transform: translateX(-30vw);
 }
 
+.sidebarContent {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
 button {
   font-family: monospace;
   text-transform: uppercase;
@@ -62,7 +73,8 @@ button {
   height: 40px;
   width: 150px;
   transform: rotateZ(270deg);
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.95);
+  font-family: 'Source Sans Pro';
 }
 
 .align-content-right {
@@ -75,7 +87,10 @@ button {
   background: none;
   font-size: 30px;
   color: #555;
-  margin: 5px;
+  font-family: monospace;
+  position: absolute;
+  right: 10px;
+  top: 10px;
 }
 
 #closeDetails:hover {

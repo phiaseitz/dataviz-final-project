@@ -162,5 +162,20 @@ function showDetails(hospitalDatum) {
   const sidebar = d3.select('#detailSidebar');
   sidebar.classed('show', true);
 
-  
+  d3.select('#hospitalNameField')
+    .text(hospitalDatum['Hospital'].toLowerCase());
+
+  const { Address } = hospitalDatum;
+
+  d3.select('#addressField')
+    .text(Address['StreetAddress'].toLowerCase());
+
+  d3.select('#cityField')
+    .text(Address['City'].toLowerCase());
+
+  d3.select('#stateField')
+    .text(Address['State']);
+
+  d3.select('#zipField')
+    .text(Address['ZIP']);
 }
