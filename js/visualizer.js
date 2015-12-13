@@ -104,7 +104,7 @@ const hospitalCriteria = [
       {
         // An individual question example: currently deactivated by its 0 weight
         name: "Cleanliness",
-        weight: 0,
+        weight: 1.0,
         maxValue: 5,
         value: d => d["H_CLEAN_STAR_RATING"],
       },
@@ -118,6 +118,23 @@ const hospitalCriteria = [
   },
 ];
 
+const donutData = [
+  {
+    name: "Comfort",
+    weight: 1.0,
+    maxValue: .5,
+  },
+  {
+    name: "Affordability",
+    weight: 1.0,
+    maxValue: .5,
+  },
+  {
+    name: "Quality",
+    weight: 1.0,
+    maxValue: .5,
+  }
+];
 /**
  * Given a datum and an array of criteria, evaluate the overall scoring of a
  * hospital based on the criteria, accounting for weighting. Note that
@@ -171,6 +188,12 @@ function showDetails(hospitalDatum) {
   const sidebar = d3.select('#detailSidebar');
   sidebar.classed('show', true);
 
+  var donut = d3.select('#hospitalDonut')
+    .data(donutData)
+    .enter()
+    .append("text")
+    .text("I'm here!")
+
   d3.select('#hospitalNameField')
     .text(hospitalDatum['Hospital'].toLowerCase());
 
@@ -188,3 +211,4 @@ function showDetails(hospitalDatum) {
   d3.select('#zipField')
     .text(Address['ZIP']);
 }
+
