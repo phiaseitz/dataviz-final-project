@@ -246,6 +246,7 @@ const hospitalCriteria = [
   },
 ];
 
+//fake data -- to be replaced with Criteria class stuff
 const donutData = [
   {
     name: "Comfort",
@@ -318,7 +319,7 @@ function showDetails(hospitalDatum) {
 
   var pie = d3.layout.pie()
     .sort(null)
-    .value(function(d){return d.weight;})
+    .value(function(d){return d.weight;}) 
 
   var svg = d3.select('#hospitalDonut');
   var width = svg[0][0].clientWidth;
@@ -326,10 +327,15 @@ function showDetails(hospitalDatum) {
   
   var viz = svg.append("g")
     .attr("transform", "translate("+ width/2 + "," + width/2 +")"); //center donut viz in square SVG
+
+  const maxRadius = .4*width;
+  const minRadius = .2*width;
+  const textRadius = maxRadius + 20; //padding = 20
   
+  //background circle (shows "maxValue")
   var bkgArc = d3.svg.arc()
-    .outerRadius(.4*width) //fixed
-    .innerRadius(.2*width)  //fixed
+    .outerRadius(maxRadius) 
+    .innerRadius(minRadius)  
     .startAngle(0)
     .endAngle(2*Math.PI);
 
@@ -340,12 +346,11 @@ function showDetails(hospitalDatum) {
     .attr("fill", "lightgray");
 
   var arc = d3.svg.arc()
-    //.outerRadius(.3*width) //to change w/ data
-    .innerRadius(.2*width);
+    .innerRadius(minRadius);  //outerRadius to change w/ data
 
   var labelArc = d3.svg.arc()
-    .outerRadius(.47*width)  //fixed
-    .innerRadius(.47*width);
+    .outerRadius(textRadius)  
+    .innerRadius(textRadius);
 
   var g = viz.selectAll(".arc")
     .data(pie(donutData))
@@ -355,7 +360,7 @@ function showDetails(hospitalDatum) {
 
   var radiusScale = d3.scale.linear()
   .domain([0, 1])
-  .range([.2*width, .4*width]);
+  .range([minRadius, maxRadius]);
 
   g.append("path")
     .each(function(d){d.outerRadius = radiusScale(d.data.normalizedValue);}) 
