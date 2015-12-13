@@ -96,6 +96,8 @@ const COLORS = d3.scale.linear()
   .domain([0, 1])
   .range(["black", "#cedb9c"]);
 
+const DONUT_COLORS = ["#E5947E", "#933652", "#EBF5FF"];
+
 //The Human-Readable translations of the code names. 
 const CODEKEY = {
   StarRatings: {
@@ -248,17 +250,17 @@ const donutData = [
   {
     name: "Comfort",
     weight: 1.0,
-    maxValue: .5,
+    normalizedValue: .5,
   },
   {
     name: "Affordability",
     weight: 1.0,
-    maxValue: .5,
+    normalizedValue: .5,
   },
   {
     name: "Quality",
     weight: 1.0,
-    maxValue: .5,
+    normalizedValue: .5,
   }
 ];
 /**
@@ -314,11 +316,57 @@ function showDetails(hospitalDatum) {
   const sidebar = d3.select('#detailSidebar');
   sidebar.classed('show', true);
 
-  var donut = d3.select('#hospitalDonut')
-    .data(donutData)
+  var pie = d3.layout.pie()
+    .sort(null)
+    .value(function(d){return d.weight;})
+
+  var svg = d3.select('#hospitalDonut');
+  var width = svg[0][0].clientWidth;
+  svg.attr("height", width); //make SVG square
+  
+  var viz = svg.append("g")
+    .attr("transform", "translate("+ width/2 + "," + width/2 +")"); //center donut viz in square SVG
+  
+  var bkgArc = d3.svg.arc()
+    .outerRadius(.4*width) //fixed
+    .innerRadius(.2*width)  //fixed
+    .startAngle(0)
+    .endAngle(2*Math.PI);
+
+  viz.append("g")
+    .attr("class", "bkgArc")
+    .append("path")
+    .attr("d",bkgArc)
+    .attr("fill", "lightgray");
+
+  var arc = d3.svg.arc()
+    //.outerRadius(.3*width) //to change w/ data
+    .innerRadius(.2*width);
+
+  var labelArc = d3.svg.arc()
+    .outerRadius(.47*width)  //fixed
+    .innerRadius(.47*width);
+
+  var g = viz.selectAll(".arc")
+    .data(pie(donutData))
     .enter()
-    .append("text")
-    .text("I'm here!")
+    .append("g")
+    .attr("class", "arc");
+
+  var radiusScale = d3.scale.linear()
+  .domain([0, 1])
+  .range([.2*width, .4*width]);
+
+  g.append("path")
+    .each(function(d){d.outerRadius = radiusScale(d.data.normalizedValue);}) 
+    .attr("d", arc)
+    .style("fill",function(d,i){return DONUT_COLORS[i]});
+
+  g.append("text")
+    .attr("transform", function(d){return "translate("+labelArc.centroid(d)+")";})
+    .attr("dy", ".35em")
+    .attr("text-anchor", "middle")
+    .text(function(d){return d.data.name;});
 
   d3.select('#hospitalNameField')
     .text(hospitalDatum['Hospital'].toLowerCase());
