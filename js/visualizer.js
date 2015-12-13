@@ -1,13 +1,139 @@
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 5,
+  zoom: 4,
   center: new google.maps.LatLng(39.828215,-98.5817593),
-  mapTypeId: google.maps.MapTypeId.HYBRID
+  mapTypeId: google.maps.MapTypeId.ROADMAP
 });
+
+var styles = [
+  //This colors the land.
+  { featureType: "landscape",
+    elementType: "all",
+    stylers: [
+      {hue: "#669999"},
+      {saturation: -10},
+      {lightness: 0},
+      {visibility: "simplified"}
+    ]
+  },
+  //Points of interest are parks and stuff.
+  //We can turn this off
+  { featureType: "poi",
+    elementType: "all",
+    stylers: [
+      {hue: "#ffffff"},
+      {saturation: -100},
+      {lightness: 100},
+      {visibility: "off"}
+    ]
+  },
+  //the roads themselves
+  { featureType: "road",
+    elementType: "geometry",
+    stylers: [
+      {hue: "#bbc0c4"},
+      {saturation: -93},
+      {lightness: 31},
+      {visibility: "simplified"},
+      {weight: 2}
+    ]
+  },
+  //The road labels
+  {featureType: "road",
+    elementType: "labels",
+    stylers: [
+      {hue: "#bbc0c4"},
+      {saturation: -93},
+      {lightness: 31},
+      {visibility: "simplified"}
+    ]
+  },
+  {
+    featureType: "road.arterial",
+    elementType: "labels",
+    stylers: [
+      {hue: "#bbc0c4"},
+      {saturation: -93},
+      {lightness: -2},
+      {visibility: "simplified"}
+    ]
+  },
+  {featureType: "road.local",
+    elementType: "geometry",
+    stylers: [
+      {hue: "#e9ebed"},
+      {saturation: -90},
+      {lightness: -8},
+      {visibility: "simplified"}
+    ]
+  },
+  {
+    featureType: "transit",
+    elementType: "all",
+    stylers: [
+      {hue: "#e9ebed"},
+      {saturation: 10},
+      {lightness: 69},
+      {visibility: "on"}
+    ]
+  },
+  //This changes the color of the water
+  {
+    featureType: "water",
+    elementType: "all",
+    stylers: [
+      {hue: "#6699ff"},
+      {saturation: 100},
+      {lightness: 20},
+      {visibility: "simplified"}
+    ]
+  }
+];
+
+map.setOptions({styles: styles});
 
 const COLORS = d3.scale.linear()
   .domain([0, 1])
   .range(["black", "#cedb9c"]);
+
+//The Human-Readable translations of the code names. 
+const CODEKEY = {
+  StarRatings: {
+    H_STAR_RATING: "Summary Star Rating", 
+    H_CLEAN_STAR_RATING: "Cleanliness - Star Rating", 
+    H_COMP_1_STAR_RATING: "Nurse Communication - Star Rating", 
+    H_COMP_2_STAR_RATING: "Doctor Communicaiton - Star Rating", 
+    H_COMP_3_STAR_RATING: "Staff Responsiveness - Star Rating",
+    H_COMP_4_STAR_RATING: "Pain Management - Star Rating",
+    H_COMP_5_STAR_RATING: "Communication About Medicine - Star Rating",
+    H_COMP_6_STAR_RATING: "Discharge Information - Star Rating",
+    H_COMP_7_STAR_RATING: "Care Transition - Star Rating",
+    H_HSP_RATING_STAR_RATING: "Overall Hospital - Star Rating",
+    H_QUIET_STAR_RATING: "Quietness - Star Rating",
+    H_RECMND_STAR_RATING: "Reccommend Hospital - Star Rating",
+  },
+  Payment: {
+    PAYM_30_AMI: "Payment for Heart Attack Patients",
+    PAYM_30_HF: "Payment for Heart Failure Patients",
+    PAYM_30_PN: "Payment for Pneumonia Patients",
+  },
+  ReadmissionAndDeath: {
+    MORT_30_AMI: "Heart Attack 30-Day Mortality Rate",
+    MORT_30_CAPG: "CABG 30-Day Mortality Rate",
+    MORT_30_COPD: "Chronic Obstructive Pulmonary Disease 30-Day Mortality Rate",
+    MORT_30_HF: "Heart Failure 30-Day Mortality Rate",
+    MORT_30_PN: "Pneumonia 30-Day Mortality Rate",
+    MORT_30_STK: "Stroke 30-Day Mortality Rate",
+    READM_30_AMI: "Heart Attack 30-Day Readmission Rate",
+    READM_30_CAPG: "CABG 30-Day Readmission Rate",
+    READM_30_COPD: "Chronic Obstructive Pulmonary Disease 30-Day Readmission Rate",
+    READM_30_HF: "Heart Failure 30-Day Readmission Rate",
+    READM_30_PN: "Pneumonia 30-Day Readmission Rate",
+    READM_30_STK: "Stroke 30-Day Readmission Rate",
+    READM_30_HIP_KNEE: "Hip/Knee Surgery Readmission Rate",
+    READM_30_HOSP_WIDE: "Hospital-Wide Readmission",
+  },
+};
 
 // Load the hospital data. When the data comes back, create an overlay.
 d3.json("hospitalData.json", (data) => {
