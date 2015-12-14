@@ -330,7 +330,7 @@ function showDetails(hospitalDatum) {
 
   const maxRadius = .4*width;
   const minRadius = .2*width;
-  const textRadius = maxRadius + 20; //padding = 20
+  const textRadius = maxRadius*1.2; //padding = 20
   
   //background circle (shows "maxValue")
   var bkgArc = d3.svg.arc()
@@ -369,9 +369,18 @@ function showDetails(hospitalDatum) {
 
   g.append("text")
     .attr("transform", function(d){return "translate("+labelArc.centroid(d)+")";})
-    .attr("dy", ".35em")
+    // .attr("dy", ".35em")
     .attr("text-anchor", "middle")
     .text(function(d){return d.data.name;});
+
+  viz.append("text")
+    .attr("x", 0) //centered w/ transform
+    .attr("y", 0) //center w/ transform
+    .attr("text-anchor", "middle")
+    .text("%%")
+    .append("text")
+    .text("rating")
+
 
   d3.select('#hospitalNameField')
     .text(hospitalDatum['Hospital'].toLowerCase());
