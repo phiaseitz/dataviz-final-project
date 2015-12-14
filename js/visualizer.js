@@ -96,44 +96,7 @@ const COLORS = d3.scale.linear()
   .domain([0, 1])
   .range(["black", "#cedb9c"]);
 
-//The Human-Readable translations of the code names. 
-const CODEKEY = {
-  StarRatings: {
-    H_STAR_RATING: "Summary Star Rating", 
-    H_CLEAN_STAR_RATING: "Cleanliness - Star Rating", 
-    H_COMP_1_STAR_RATING: "Nurse Communication - Star Rating", 
-    H_COMP_2_STAR_RATING: "Doctor Communicaiton - Star Rating", 
-    H_COMP_3_STAR_RATING: "Staff Responsiveness - Star Rating",
-    H_COMP_4_STAR_RATING: "Pain Management - Star Rating",
-    H_COMP_5_STAR_RATING: "Communication About Medicine - Star Rating",
-    H_COMP_6_STAR_RATING: "Discharge Information - Star Rating",
-    H_COMP_7_STAR_RATING: "Care Transition - Star Rating",
-    H_HSP_RATING_STAR_RATING: "Overall Hospital - Star Rating",
-    H_QUIET_STAR_RATING: "Quietness - Star Rating",
-    H_RECMND_STAR_RATING: "Reccommend Hospital - Star Rating",
-  },
-  Payment: {
-    PAYM_30_AMI: "Payment for Heart Attack Patients",
-    PAYM_30_HF: "Payment for Heart Failure Patients",
-    PAYM_30_PN: "Payment for Pneumonia Patients",
-  },
-  ReadmissionAndDeath: {
-    MORT_30_AMI: "Heart Attack 30-Day Mortality Rate",
-    MORT_30_CAPG: "CABG 30-Day Mortality Rate",
-    MORT_30_COPD: "Chronic Obstructive Pulmonary Disease 30-Day Mortality Rate",
-    MORT_30_HF: "Heart Failure 30-Day Mortality Rate",
-    MORT_30_PN: "Pneumonia 30-Day Mortality Rate",
-    MORT_30_STK: "Stroke 30-Day Mortality Rate",
-    READM_30_AMI: "Heart Attack 30-Day Readmission Rate",
-    READM_30_CAPG: "CABG 30-Day Readmission Rate",
-    READM_30_COPD: "Chronic Obstructive Pulmonary Disease 30-Day Readmission Rate",
-    READM_30_HF: "Heart Failure 30-Day Readmission Rate",
-    READM_30_PN: "Pneumonia 30-Day Readmission Rate",
-    READM_30_STK: "Stroke 30-Day Readmission Rate",
-    READM_30_HIP_KNEE: "Hip/Knee Surgery Readmission Rate",
-    READM_30_HOSP_WIDE: "Hospital-Wide Readmission",
-  },
-};
+const DONUT_COLORS = ["#E5947E", "#933652", "#EBF5FF"];
 
 // Load the hospital data. When the data comes back, create an overlay.
 d3.json("hospitalData.json", (data) => {
@@ -164,7 +127,7 @@ d3.json("hospitalData.json", (data) => {
           r: 6,
           cx: padding,
           cy: padding,
-          fill: d => COLORS(evaluateCriteria(d.value, hospitalCriteria)),
+          fill: d => COLORS(evaluateCriteria(d.value)),
           id: d => d.key,
         })
         .on("mouseenter", function (d) {
@@ -230,7 +193,7 @@ const hospitalCriteria = [
       {
         // An individual question example: currently deactivated by its 0 weight
         name: "Cleanliness",
-        weight: 0,
+        weight: 1.0,
         maxValue: 5,
         value: d => d["H_CLEAN_STAR_RATING"],
       },
@@ -244,6 +207,24 @@ const hospitalCriteria = [
   },
 ];
 
+//fake data -- to be replaced with Criteria class stuff
+const donutData = [
+  {
+    name: "Comfort",
+    weight: 1.0,
+    normalizedValue: .5,
+  },
+  {
+    name: "Affordability",
+    weight: 1.0,
+    normalizedValue: .5,
+  },
+  {
+    name: "Quality",
+    weight: 1.0,
+    normalizedValue: .5,
+  }
+];
 /**
  * Given a datum and an array of criteria, evaluate the overall scoring of a
  * hospital based on the criteria, accounting for weighting. Note that
@@ -293,9 +274,11 @@ function evaluateCriteria(datum, criteria=hospitalCriteria, verbose=false) {
   return weightedValueSum / weightsSum;
 }
 
-function showDetails(hospitalDatum) {
+function showDetails(hospitalDatum, criteria) {
   const sidebar = d3.select('#detailSidebar');
   sidebar.classed('show', true);
+
+  addDonutChart('#hospitalDonut', hospitalDatum, criteria);
 
   d3.select('#hospitalNameField')
     .text(hospitalDatum['Hospital'].toLowerCase());
@@ -313,4 +296,68 @@ function showDetails(hospitalDatum) {
 
   d3.select('#zipField')
     .text(Address['ZIP']);
+}
+
+
+function addDonutChart(target, datum, criteria=[]) {
+
+  // TODO: Add a margin around the chart. Right now, a small width may cause
+  // the text on the bottom to be cut-off
+
+  const svg = d3.select(target);
+  const width = svg[0][0].clientWidth;
+  svg.attr("height", width); //make SVG square
+
+  // Center donut viz in square SVG
+  const viz = svg.append("g")
+    .attr("transform", `translate( ${width/2}, ${width/2})`);
+
+  const maxRadius = 0.4 * width;
+  const minRadius = 0.2 * width;
+  const textRadius = maxRadius + 20; // padding = 20
+
+  // Background circle (shows "maxValue")
+  const bkgArc = d3.svg.arc()
+    .outerRadius(maxRadius)
+    .innerRadius(minRadius)
+    .startAngle(0)
+    .endAngle(2*Math.PI);
+
+  viz.append("g")
+    .attr("class", "bkgArc")
+    .append("path")
+    .attr("d", bkgArc)
+    .attr("fill", "lightgray");
+
+  const arc = d3.svg.arc()
+    .innerRadius(minRadius);  // outerRadius to change w/ data
+
+  const labelArc = d3.svg.arc()
+    .outerRadius(textRadius)
+    .innerRadius(textRadius);
+
+  const pie = d3.layout.pie()
+    .sort(null)
+    .value(d => d.weight);
+
+  const g = viz.selectAll(".arc")
+    .data(pie(donutData))
+    .enter()
+    .append("g")
+    .attr("class", "arc");
+
+  const radiusScale = d3.scale.linear()
+    .domain([0, 1])
+    .range([minRadius, maxRadius]);
+
+  g.append("path")
+    .each(d => { d.outerRadius = radiusScale(d.data.normalizedValue); })
+    .attr("d", arc)
+    .style("fill", (d, i) =>  DONUT_COLORS[i]);
+
+  g.append("text")
+    .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
+    .attr("dy", ".35em")
+    .attr("text-anchor", "middle")
+    .text(d => d.data.name);
 }
