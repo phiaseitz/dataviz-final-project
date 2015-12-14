@@ -1,0 +1,420 @@
+[
+  {
+    "name": "Comfort",
+    "components": [
+      {
+        "invert": false,
+        "name": "Patients' Overall Rating of Hospital",
+        "weight": 1,
+        "distribution": {
+          "stdDev": 1.0946909117980455,
+          "mean": 3.094250148192057
+        },
+        "metric": [
+          "StarRatings",
+          "H_HSP_RATING_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Cleanliness",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.9608026806316887,
+          "mean": 2.9605809128630707
+        },
+        "metric": [
+          "StarRatings",
+          "H_CLEAN_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Nurse Communication",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.9940492961758112,
+          "mean": 3.425903971547125
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_1_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Doctor Communication",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 1.0183026064212595,
+          "mean": 3.2590397154712507
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_2_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Staff Responsiveness",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 1.0756460101196268,
+          "mean": 3.0527563722584468
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_3_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Pain Management",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.8790467103017308,
+          "mean": 3.267042086544161
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_4_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Communication about Medicine",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 1.0104716847119815,
+          "mean": 2.8227622999407234
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_5_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Information on Discharge",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.9344798571633478,
+          "mean": 3.497628927089508
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_6_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Care Transition",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.9917384241647322,
+          "mean": 3.0583876704208652
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_7_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Rating of Hospital Quietness",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.9917384241647322,
+          "mean": 3.0583876704208652
+        },
+        "metric": [
+          "StarRatings",
+          "H_COMP_7_STAR_RATING"
+        ]
+      },
+      {
+        "invert": false,
+        "name": "Patients' Would Recommend",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.942013862363968,
+          "mean": 3.2421458209839953
+        },
+        "metric": [
+          "StarRatings",
+          "H_RECMND_STAR_RATING"
+        ]
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "name": "Quality",
+    "components": [
+      {
+        "invert": true,
+        "name": "Hospital-Wide 30-Day Readmission",
+        "weight": 1,
+        "distribution": {
+          "stdDev": 0.8481682546088724,
+          "mean": 15.236882933709449
+        },
+        "metric": [
+          "ReadmissionsAndDeaths",
+          "READM_30_HOSP_WIDE"
+        ]
+      },
+      {
+        "name": "Heart Attack Care Quality",
+        "components": [
+          {
+            "invert": true,
+            "name": "Heart Attack 30-Day Mortality",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.257452401557379,
+              "mean": 14.153299705758721
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "MORT_30_AMI"
+            ]
+          },
+          {
+            "invert": true,
+            "name": "Heart Attack 30-Day Readmission",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.082493539753707,
+              "mean": 17.039807604214385
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "READM_30_AMI"
+            ]
+          }
+        ],
+        "weight": 0
+      },
+      {
+        "name": "Coronary Heart Disease Care Quality",
+        "components": [
+          {
+            "invert": true,
+            "name": "Coronary Artery Bypass Grafting 30-Day Mortality",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 0.8068152961700692,
+              "mean": 3.2524900398406373
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "MORT_30_CABG"
+            ]
+          },
+          {
+            "invert": true,
+            "name": "Coronary Artery Bypass Grafting 30-Day Readmission",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.3352080471416368,
+              "mean": 14.966867469879517
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "READM_30_CABG"
+            ]
+          }
+        ],
+        "weight": 0
+      },
+      {
+        "name": "Chronic Obstructive Pulmonary Disease Care Quality",
+        "components": [
+          {
+            "invert": true,
+            "name": "Chronic Obstructive Pulmonary Disease 30-Day Mortality",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.03466305856477,
+              "mean": 7.76629116117851
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "MORT_30_COPD"
+            ]
+          },
+          {
+            "invert": true,
+            "name": "Chronic Obstructive Pulmonary Disease 30-Day Readmission",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.265773203111408,
+              "mean": 20.257671658660637
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "READM_30_COPD"
+            ]
+          }
+        ],
+        "weight": 0
+      },
+      {
+        "name": "Heart Failure Care Quality",
+        "components": [
+          {
+            "invert": true,
+            "name": "Heart Failure 30-Day Mortality",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.4334604412572676,
+              "mean": 11.686790362780393
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "MORT_30_HF"
+            ]
+          },
+          {
+            "invert": true,
+            "name": "Heart Failure 30-Day Readmission",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.5901041113385443,
+              "mean": 22.051880920162382
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "READM_30_HF"
+            ]
+          }
+        ],
+        "weight": 0
+      },
+      {
+        "name": "Pneumonia Care Quality",
+        "components": [
+          {
+            "invert": true,
+            "name": "Pneumonia 30-Day Mortality",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.7131981368668454,
+              "mean": 11.613241895261845
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "MORT_30_PN"
+            ]
+          },
+          {
+            "invert": true,
+            "name": "Pneumonia 30-Day Readmission",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.1179438492894185,
+              "mean": 16.968389662027835
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "READM_30_PN"
+            ]
+          }
+        ],
+        "weight": 0
+      },
+      {
+        "name": "Stroke Care Quality",
+        "components": [
+          {
+            "invert": true,
+            "name": "Stroke 30-Day Mortality",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.648023099639204,
+              "mean": 14.848683708508204
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "MORT_30_STK"
+            ]
+          },
+          {
+            "invert": true,
+            "name": "Stroke 30-Day Readmission",
+            "weight": 1,
+            "distribution": {
+              "stdDev": 1.114977551437922,
+              "mean": 12.767542503863988
+            },
+            "metric": [
+              "ReadmissionsAndDeaths",
+              "READM_30_STK"
+            ]
+          }
+        ],
+        "weight": 0
+      },
+      {
+        "invert": true,
+        "name": "Hip/Knee Surgery Quality",
+        "weight": 0,
+        "distribution": {
+          "stdDev": 0.6353418385527352,
+          "mean": 4.880136726167869
+        },
+        "metric": [
+          "ReadmissionsAndDeaths",
+          "READM_30_HIP_KNEE"
+        ]
+      }
+    ],
+    "weight": 1
+  },
+  {
+    "name": "Affordability",
+    "components": [
+      {
+        "invert": true,
+        "name": "Affordability for Heart Attack Patients",
+        "weight": 1,
+        "distribution": {
+          "stdDev": 1762.0428255016893,
+          "mean": 22103.820935412026
+        },
+        "metric": [
+          "Payment",
+          "PAYM_30_AMI"
+        ]
+      },
+      {
+        "invert": true,
+        "name": "Affordability for Heart Failure Patients",
+        "weight": 1,
+        "distribution": {
+          "stdDev": 1506.9633435559333,
+          "mean": 15321.995327102804
+        },
+        "metric": [
+          "Payment",
+          "PAYM_30_HF"
+        ]
+      },
+      {
+        "invert": true,
+        "name": "Affordability for Pneumonia Patients",
+        "weight": 1,
+        "distribution": {
+          "stdDev": 1413.6971042772439,
+          "mean": 14273.033454356846
+        },
+        "metric": [
+          "Payment",
+          "PAYM_30_PN"
+        ]
+      }
+    ],
+    "weight": 1
+  }
+]
