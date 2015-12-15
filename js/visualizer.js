@@ -358,18 +358,6 @@ function addDonutChart(target, datum, criteria=[]) {
       exitDonutDrilldown(d);
     });
 
-  g.append("path")
-    .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .style('opacity', 0.1)
-    .attr("class", "bkgArc");
-
-  g.append("path")
-    .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .style('opacity', 0.1)
-    .attr("class", "bkgArc");
-
   g.append("text")
     .attr("dy", ".35em")
     .attr("x", function (d) {
@@ -445,11 +433,16 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     .startAngle(criteria.startAngle)
     .endAngle(criteria.endAngle);
 
-  const drilldown = metricRatingGroup.selectAll(".drilldownData")
+  const drilldownGroup = metricRatingGroup.selectAll(".drilldown")
+    .append("g")
+    .attr("class", "drilldown")
+    .attr("id", criteria.data.name + "Drilldown");
+
+  const drilldown = drilldownGroup.selectAll(".drilldownMetric")
     .data(drilldownPie(criteria.data.components))
     .enter()
     .append("g")
-    .attr("class", "drilldownData");
+    .attr("class", "drilldownMetric");
 
   //For some reason I can't get the arcs to animate, so, they don't animate here. 
   drilldown.each(function (d) {
