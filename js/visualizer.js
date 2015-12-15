@@ -104,7 +104,11 @@ const DONUT_COLORS = ["#779FA1", "#FF6542", "#564154"];
 Promise.all([
   new Promise((resolve, reject) => d3.json("hospitalData.json", resolve)),
   new Promise((resolve, reject) => d3.json("ratingCriteria.json", resolve)),
-]).then(values => createOverlay(...values, true));
+]).then(values => {
+  createOverlay(...values, true)
+  const [data, criteria] = values;
+  bindControls(criteria);
+});
 
 
 /**
@@ -448,6 +452,38 @@ function ztable(zscore) {
 
   return percentile;
 };
+
+function bindControls(criteria) {
+  d3.select("#loadingIndicator").remove();
+  const controls = d3.select("#controls");
+  createCategoryControls(controls, criteria);
+}
+
+function createCategoryControls(target, criteria) {
+  const categoryControls = target.append("div")
+    .attr("id", "categoryControls")
+    .selectAll(".categoryControl")
+    .data(criteria)
+    .enter()
+    .append("div")
+    .attr("class", "categoryControl");
+
+  categoryControls.append("label")
+    .text(criterion => criterion.name);
+
+  categoryControls.append("input")
+    .attr({
+      type: "range",
+      value: criterion => criterion["weight"],
+      max: 1,
+      step: 0.05,
+    })
+    .on("change", function (criterion, index) {
+      // Note: this mutates the critera object
+      criterion["weight"] = this.value;
+      // TODO: Regenerate hospital colors and donut chart
+    })
+}
 
 const ZTABLE = {
   "-0.00": 0.5,
