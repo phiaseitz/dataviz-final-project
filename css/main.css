@@ -138,6 +138,7 @@ button {
   align-self: center;
 }
 
+<<<<<<< 5ad2c385fde92a8aea1fb78ec8606659ede36d5d
 .categoryControl {
   display: flex;
   flex-direction: column;
@@ -209,4 +210,12 @@ input[type=range]::-moz-range-thumb {
 
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
+=======
+.rating {
+  pointer-events: none;
+}
+
+.drilldownData{
+  pointer-events: none;
+>>>>>>> Split arcs on mouseover
 }
