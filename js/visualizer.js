@@ -409,10 +409,18 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("class", "criteriaSlice");
 
   g.append("text")
-    .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
     .attr("dy", ".35em")
+    .attr("x", function (d) {
+      const textAngle = d.endAngle - d.startAngle;
+      return textRadius * Math.sin(textAngle);
+    })
+    .attr("y", function(d){
+      const textAngle = d.endAngle - d.startAngle;
+      return -textRadius * Math.sin(textAngle);
+    })
     .attr("text-anchor", "middle")
-    .text(d => d.data.name);
+    .text(d => d.data.name)
+    .attr("class", "metricLabel");
 }
 
 function updateDonutChart(target, datum, criteria=[]) {
@@ -438,18 +446,9 @@ function updateDonutChart(target, datum, criteria=[]) {
     .domain([0, 1])
     .range([minRadius, maxRadius]);
 
-  // // Background circle (shows "maxValue")
-  // const bkgArc = d3.svg.arc()
-  //   .outerRadius(maxRadius)
-  //   .innerRadius(minRadius)
-  //   .startAngle(0)
-  //   .endAngle(2*Math.PI);
-
-  // viz.append("g")
-  //   .attr("class", "bkgArc")
-  //   .append("path")
-  //   .attr("d", bkgArc)
-  //   .attr("fill", "lightgray");
+  const labelArc = d3.svg.arc()
+    .innerRadius(textRadius)
+    .outerRadius(textRadius);
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
@@ -461,12 +460,6 @@ function updateDonutChart(target, datum, criteria=[]) {
   const newPieData = updatePie(criteria);
     
   //Animate the new radius. 
-
-
-  // const labelArc = d3.svg.arc()
-  //   .innerRadius(textRadius)
-  //   .outerRadius(textRadius);
-
   const criteriaGroups = viz.selectAll(".arc");
 
   //Add new radius information here. We'll do the same with 
@@ -501,20 +494,11 @@ function updateDonutChart(target, datum, criteria=[]) {
           return arc(d);
       };
     });
-  //   .data(pie(criteria))
-  //   .enter()
-  //   .append("g")
-  //   .attr("class", "arc");
 
-  // g.append("path")
-  //   .attr("d", arc)
-  //   .style("fill", (d, i) =>  DONUT_COLORS[i]);
-
-  // g.append("text")
-  //   .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
-  //   .attr("dy", ".35em")
-  //   .attr("text-anchor", "middle")
-  //   .text(d => d.data.name);
+  criteriaGroups.selectAll(".metricLabel")
+    .transition()
+    .duration(1000)
+    .attr("transform", d => `translate( ${labelArc.centroid(d)})`);
 }
 
 /**
