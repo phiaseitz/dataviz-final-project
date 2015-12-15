@@ -124,11 +124,18 @@ button {
 }
 
 #controls {
+<<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
   margin: 0 auto;
   display: flex;
   justify-content: center;
   flex-direction: column;
   width: 90%;
+=======
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+>>>>>>> Category controls generated and effective, but need to force refresh
   height: 100%;
   font-family: 'Source Sans Pro', sans-serif;
 }
@@ -136,6 +143,7 @@ button {
 #loadingIndicator {
   align-self: center;
 }
+<<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
 
 .categoryControl {
   display: flex;
@@ -209,3 +217,5 @@ input[type=range]::-moz-range-thumb {
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
 }
+=======
+>>>>>>> Category controls generated and effective, but need to force refresh
