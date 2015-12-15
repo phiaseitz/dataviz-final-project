@@ -364,6 +364,12 @@ function addDonutChart(target, datum, criteria=[]) {
     .style('opacity', 0.1)
     .attr("class", "bkgArc");
 
+  g.append("path")
+    .attr("d", bkgArc)
+    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .style('opacity', 0.1)
+    .attr("class", "bkgArc");
+
   g.append("text")
     .attr("dy", ".35em")
     .attr("x", function (d) {
