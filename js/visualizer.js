@@ -583,6 +583,7 @@ function createCategoryControls(target, criteria) {
     .append("div")
     .attr("class", "categoryControl");
 
+
   categoryControls.append("label")
     .text(criterion => criterion.name)
     .attr("class", "slider-heading");
