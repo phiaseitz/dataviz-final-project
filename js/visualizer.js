@@ -96,7 +96,7 @@ const COLORS = d3.scale.linear()
   .domain([0, 1])
   .range(["black", "#cedb9c"]);
 
-const DONUT_COLORS = ["#E5947E", "#933652", "#EBF5FF"];
+const DONUT_COLORS = ["#779FA1", "#FF6542", "#564154"];
 
 
 // Get the hospital data and ratingCriteria in parallel, but wait until
