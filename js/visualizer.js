@@ -91,6 +91,9 @@ var styles = [
 ];
 
 map.setOptions({styles: styles});
+google.maps.event.addDomListener(window, 'load', map);
+
+var overlay = new google.maps.OverlayView();
 
 const COLORS = d3.scale.linear()
   .domain([0, 1])
@@ -105,10 +108,11 @@ Promise.all([
   new Promise((resolve, reject) => d3.json("hospitalData.json", resolve)),
   new Promise((resolve, reject) => d3.json("ratingCriteria.json", resolve)),
 ]).then(values => {
-  createOverlay(...values, true)
+  createOverlay(...values, true);
   const [data, criteria] = values;
   bindControls(criteria);
 });
+
 
 
 /**
@@ -121,10 +125,8 @@ Promise.all([
  * @param  {Boolean} verbose=false A flag for console output
  */
 function createOverlay(data, criteria, verbose=false) {
-  var overlay = new google.maps.OverlayView();
-
   // Add the container when the overlay is added to the map.
-  overlay.onAdd = function() {
+   overlay.onAdd = function() {
     //var layer = d3.select(this.getPanes().overlayLayer).append("div")
     //    .attr("class", "hospitals");
     var layer = d3.select(this.getPanes().overlayMouseTarget)
@@ -185,24 +187,18 @@ function createOverlay(data, criteria, verbose=false) {
             .style("left", (d.x - padding) + "px")
             .style("top", (d.y - padding) + "px");
       }
-
-      // function codeAddress(address) {
-      //   //return lat, long for hospital address
-      //   geocoder.geocode( { 'address': address}, function(results, status) {
-      //     if (status == google.maps.GeocoderStatus.OK) {
-      //       map.setCenter(results[0].geometry.location);
-      //       var marker = new google.maps.Marker({
-      //           map: map,
-      //           position: results[0].geometry.location
-      //       });
-      //     } else {
-      //       alert("Geocode was not successful for the following reason: " + status);
-      //     }
-      //   });
-      // }
     };
   };
 
+  overlay.onRemove = function(){
+    // var layer= d3.select(this.getPanes().overlayMouseTarget);
+    // layer.select("div").parentNode.removeChild(layer.select("div"))
+    // layer.select("div") = null;
+    this.div_.parentNode.removeChild(this.div_);
+    this.div_ = null;
+    console.log("removeMap");
+  };
+  
   // Bind our overlay to the map…
   overlay.setMap(map);
 }
@@ -397,6 +393,11 @@ function addDonutChart(target, datum, criteria=[]) {
     .text(d => d.data.name);
 }
 
+function updateMapOverlay(){
+  overlay.setMap(null);
+  overlay.setMap(map);
+}
+
 /**
 node-ztable
 -----------
@@ -466,6 +467,7 @@ function createCategoryControls(target, criteria) {
     .on("change", function (criterion, index) {
       // Note: this mutates the critera object
       criterion["weight"] = this.value;
+      updateMapOverlay();
       // TODO: Regenerate hospital colors and donut chart
     })
 }
