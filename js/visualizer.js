@@ -520,20 +520,6 @@ function updateDonutChart(target, datum, criteria=[]) {
       const textAngle = (d.newEnd + d.newStart)/2;
       return -textRadius * Math.cos(textAngle);
     });
-  //   .data(pie(criteria))
-  //   .enter()
-  //   .append("g")
-  //   .attr("class", "arc");
-
-  // g.append("path")
-  //   .attr("d", arc)
-  //   .style("fill", (d, i) =>  DONUT_COLORS[i]);
-
-  // g.append("text")
-  //   .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
-  //   .attr("dy", ".35em")
-  //   .attr("text-anchor", "middle")
-  //   .text(d => d.data.name);
 }
 
 /**
