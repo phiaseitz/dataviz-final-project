@@ -295,43 +295,6 @@ function accessValue(datum, keys, verbose=false) {
   else return Number(datum[key].replace(/[^0-9\.]+/g, ""));
 }
 
-function getNationalAverage(criteria, verbose=false) {
-  let weightedSumOfMetrics = 0;
-  let sumOfWeights = 0;
-
-  criteria.forEach((criterion) => {
-    if ("components" in criterion) {
-      const { weight, components } = criterion;
-      weightedSumOfMetrics += weight * getNationalAverage(
-        components,
-        verbose
-      );
-      sumOfWeights += criterion["weight"];
-    } else if (
-      "metric" in criterion &&
-      "invert" in criterion &&
-      "distribution" in criterion
-    ) {
-      const { metric, invert, distribution, weight } = criterion;
-
-      const normedValue = getNormalizedValue(distribution.mean, distribution);
-      const metricValue = invert ? 1-normedValue : normedValue;
-
-        weightedSumOfMetrics += weight * metricValue;
-        sumOfWeights += weight;
-    } else {
-      console.warn(
-        "ERROR: criterion '",
-        criterion,
-        "' does not have all of the necessary properties"
-      );
-    }});
-
-  // Divide out sum by the acumulated weights
-  if (sumOfWeights === 0) return 0;
-  return weightedSumOfMetrics / sumOfWeights;
-}
-
 /**
  * Given a hospital's datum, insert the relevant fields into the correct place
  * in the details sidebar and show the sidebar.
@@ -439,11 +402,11 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("d", d3.svg.arc()
       .innerRadius(function(d) {
         console.log(d);
-        const percentile = getNationalAverage(d.data.components);
-        return radiusScale(percentile)})
+        //We assume the data is normally distributed, so the mean
+        //is the 50th percentile
+        return radiusScale(0.5)})
       .outerRadius(function(d){
-        const percentile = getNationalAverage(d.data.components);
-        return radiusScale(percentile) + 1}));
+        return radiusScale(0.5) + 1}));
 }
 
 /**
