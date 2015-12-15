@@ -378,13 +378,15 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const pie = d3.layout.pie()
     .sort(null)
+    // .padAngle(.02) //Does not work. What?!
     .value(d => d.weight);
 
-  const g = viz.selectAll(".arc")
+  const g = viz.selectAll(".metricGroup")
     .data(pie(criteria))
     .enter()
     .append("g")
-    .attr("class", "arc");
+    .attr("class", "metricGroup")
+    .attr("id", d => d.data.name + "Group");
 
   g.each(function(d){
      // d.data is actually a criterion
@@ -407,12 +409,18 @@ function addDonutChart(target, datum, criteria=[]) {
     .style("fill", (d, i) =>  DONUT_COLORS[i])
     .style('opacity', 0.1)
     .attr("class", "bkgArc");
+    .attr("id", d => d.data.name + "rating")
+
 
   g.append("path")
     .attr("d", bkgArc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .style('opacity', 0.1)
-    .attr("class", "bkgArc");
+    .style('opacity', 0.2)
+    .attr("id", d => d.data.name + "bkg")
+    .attr("class", "bkgArc")
+    .on("mouseover", function(d){
+      donutDrilldown(datum, d);
+    });
 
   g.append("text")
     .attr("dy", ".35em")
@@ -471,6 +479,52 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("National Average");
 }
 
+function donutDrilldown(datum, criteria){
+  console.log("datum: ", datum);
+  console.log("criteria: ", criteria);
+
+  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
+
+  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
+
+  metricRatingArc.style("visibility", "hidden");
+
+  const drilldownPie = d3.layout.pie()
+    .sort(null)
+    // .padAngle(.02) //Does not work. What?!
+    .value(d => d.weight)
+    .startAngle(criteria.startAngle)
+    .endAngle(criteria.endAngle);
+
+  const drilldownGroup = metricRatingGroup.selectAll(".drilldown")
+    .append("g")
+    .attr("class", "drilldown")
+    .attr("id", criteria.data.name + "Drilldown");
+
+  const drilldown = drilldownGroup.selectAll(".drilldownMetric")
+    .data(drilldownPie(criteria.data.components))
+    .enter()
+    .append("g")
+    .attr("class", "drilldownMetric");
+
+  console.log();
+
+  // const metricToName = {
+  //   Affordability: "Payment",
+  //   Comfort: "StarRatings",
+  //   Quality: "ReadmissionsAndDeaths"
+  // };
+
+  // const drilldownData = drilldownGroup.
+
+  criteria.data.components.forEach(function (criterion) {
+    console.log("Criterion",evaluateDatum(datum, [criterion]));
+  });
+  // const testing = evaluateDatum(datum, criteria.data.components);
+  // console.log("test:", testing);
+  // const breakDownData = datum[metricToName[criteria.data.name]];
+  // console.log(breakDownData);
+}
 
 
 function updateDonutChart(target, datum={}, criteria=[]) {
