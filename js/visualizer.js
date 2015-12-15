@@ -156,6 +156,20 @@ d3.json("hospitalData.json", (data) => {
 
 
       function transform(d) {
+        // If we don't have lat long, get from address.
+        if(d.value["Lat"] === ""){
+          console.log(d);
+          var geocoder = new google.maps.Geocoder();
+          const address = d.value["Address"]["StreetAddress"] + d.value["Address"]["City"] + d.value["Address"]["State"] + d.value["Address"]["ZIP"]
+          geocoder.geocode({'address': address}, function(results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+              console.log(results[0].geometry.location)
+            } else {
+              alert('Geocode was not successful for the following reason: ' + status);
+            }
+          });
+        }
+        
         d = new google.maps.LatLng(d.value["Lat"], d.value["Long"]);
         d = projection.fromLatLngToDivPixel(d);
         return d3.select(this)
