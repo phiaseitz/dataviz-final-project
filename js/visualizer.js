@@ -583,7 +583,6 @@ function createCategoryControls(target, criteria) {
     .append("div")
     .attr("class", "categoryControl");
 
-
   categoryControls.append("label")
     .text(criterion => criterion.name)
     .attr("class", "slider-heading");
@@ -599,7 +598,7 @@ function createCategoryControls(target, criteria) {
       // Note: this mutates the critera object
       criterion["weight"] = this.value;
       updateSidebar({}, criteria);
-      // TODO: Regenerate hospital colors and donut chart
+      // TODO: Regenerate hospital colors
     })
 }
 
