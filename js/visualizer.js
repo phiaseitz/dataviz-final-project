@@ -295,6 +295,43 @@ function accessValue(datum, keys, verbose=false) {
   else return Number(datum[key].replace(/[^0-9\.]+/g, ""));
 }
 
+function getNationalAverage(criteria, verbose=false) {
+  let weightedSumOfMetrics = 0;
+  let sumOfWeights = 0;
+
+  criteria.forEach((criterion) => {
+    if ("components" in criterion) {
+      const { weight, components } = criterion;
+      weightedSumOfMetrics += weight * getNationalAverage(
+        components,
+        verbose
+      );
+      sumOfWeights += criterion["weight"];
+    } else if (
+      "metric" in criterion &&
+      "invert" in criterion &&
+      "distribution" in criterion
+    ) {
+      const { metric, invert, distribution, weight } = criterion;
+
+      const normedValue = getNormalizedValue(distribution.mean, distribution);
+      const metricValue = invert ? 1-normedValue : normedValue;
+
+        weightedSumOfMetrics += weight * metricValue;
+        sumOfWeights += weight;
+    } else {
+      console.warn(
+        "ERROR: criterion '",
+        criterion,
+        "' does not have all of the necessary properties"
+      );
+    }});
+
+  // Divide out sum by the acumulated weights
+  if (sumOfWeights === 0) return 0;
+  return weightedSumOfMetrics / sumOfWeights;
+}
+
 /**
  * Given a hospital's datum, insert the relevant fields into the correct place
  * in the details sidebar and show the sidebar.
@@ -330,6 +367,7 @@ function addDonutChart(target, datum, criteria=[]) {
 
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
+  console.log(criteria);
 
   const svg = d3.select(target);
   const width = svg[0][0].clientWidth;
@@ -391,6 +429,21 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("dy", ".35em")
     .attr("text-anchor", "middle")
     .text(d => d.data.name);
+
+  //the national average line. Not creating an arc variable
+  //for this because we don't know any of the parameters 
+  //ahead of time. 
+  //Also, it seems like these are all 0.5, even though the 
+  //mean is not necessarily 50th percentile
+  g.append("path")
+    .attr("d", d3.svg.arc()
+      .innerRadius(function(d) {
+        console.log(d);
+        const percentile = getNationalAverage(d.data.components);
+        return radiusScale(percentile)})
+      .outerRadius(function(d){
+        const percentile = getNationalAverage(d.data.components);
+        return radiusScale(percentile) + 1}));
 }
 
 /**
