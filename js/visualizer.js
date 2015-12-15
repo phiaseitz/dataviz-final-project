@@ -425,6 +425,10 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color){
 
   metricRatingArc.style("visibility", "hidden");
 
+  const opacityScale = d3.scale.linear()
+    .domain([0, 1])
+    .range([0.5, 1]);
+
   const drilldownPie = d3.layout.pie()
     .sort(null)
     // .padAngle(.02) //Does not work. What?!
@@ -448,6 +452,10 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color){
     .append("path")
     .attr("d", arc)
     .style("fill", color)
+    .style("opacity", function(d,i) {
+      const percentThroughCriteria = i/(criteria.data.components.length -1);
+      return opacityScale(percentThroughCriteria);
+    })
     .style("stroke-width", 2)
     .style("stroke", "white");
 
