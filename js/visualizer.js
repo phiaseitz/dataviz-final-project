@@ -413,12 +413,13 @@ function addDonutChart(target, datum, criteria=[]) {
   g.append("text")
     .attr("dy", ".35em")
     .attr("x", function (d) {
-      const textAngle = d.endAngle - d.startAngle;
+      const textAngle = (d.endAngle + d.startAngle)/2;
+      console.log(textAngle);
       return textRadius * Math.sin(textAngle);
     })
     .attr("y", function(d){
-      const textAngle = d.endAngle - d.startAngle;
-      return -textRadius * Math.sin(textAngle);
+      const textAngle = (d.endAngle + d.startAngle)/2;
+      return -textRadius * Math.cos(textAngle);
     })
     .attr("text-anchor", "middle")
     .text(d => d.data.name)
@@ -511,7 +512,15 @@ function updateDonutChart(target, datum, criteria=[]) {
   criteriaGroups.selectAll(".metricLabel")
     .transition()
     .duration(1000)
-    .attr("transform", d => `translate( ${labelArc.centroid(d)})`);
+    .attr("x", function (d) {
+      const textAngle = (d.newEnd + d.newStart)/2;
+      console.log(textAngle);
+      return textRadius * Math.sin(textAngle);
+    })
+    .attr("y", function(d){
+      const textAngle = (d.newEnd + d.newStart)/2;
+      return -textRadius * Math.cos(textAngle);
+    });
 }
 
 /**
