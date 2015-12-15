@@ -351,8 +351,11 @@ function addDonutChart(target, datum, criteria=[]) {
     .style('opacity', 0.2)
     .attr("id", d => d.data.name + "bkg")
     .attr("class", "bkgArc")
-    .on("mouseover", function(d){
-      donutDrilldown(datum, d);
+    .on("mouseover", function(d,i){
+      donutDrilldown(datum, d, radiusScale, arc, DONUT_COLORS[i]);
+    })
+    .on("mouseout", function(d){
+      exitDonutDrilldown(d);
     });
 
   g.append("text")
@@ -412,7 +415,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("National Average");
 }
 
-function donutDrilldown(datum, criteria){
+function donutDrilldown(datum, criteria, radiusScale, arc, color){
   console.log("datum: ", datum);
   console.log("criteria: ", criteria);
 
@@ -429,34 +432,36 @@ function donutDrilldown(datum, criteria){
     .startAngle(criteria.startAngle)
     .endAngle(criteria.endAngle);
 
-  const drilldownGroup = metricRatingGroup.selectAll(".drilldown")
-    .append("g")
-    .attr("class", "drilldown")
-    .attr("id", criteria.data.name + "Drilldown");
-
-  const drilldown = drilldownGroup.selectAll(".drilldownMetric")
+  const drilldown = metricRatingGroup.selectAll(".drilldownData")
     .data(drilldownPie(criteria.data.components))
     .enter()
     .append("g")
-    .attr("class", "drilldownMetric");
+    .attr("class", "drilldownData");
 
-  console.log();
+  //For some reason I can't get the arcs to animate, so, they don't animate here. 
+  drilldown.each(function (d) {
+      d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
 
-  // const metricToName = {
-  //   Affordability: "Payment",
-  //   Comfort: "StarRatings",
-  //   Quality: "ReadmissionsAndDeaths"
-  // };
+      console.log(d.outerRadius);
+      console.log(d.newOuter);
+    })
+    .append("path")
+    .attr("d", arc)
+    .style("fill", color)
+    .style("stroke-width", 2)
+    .style("stroke", "white");
 
-  // const drilldownData = drilldownGroup.
+    //TODO: Draw the legend and decide what that should look like. 
+}
 
-  criteria.data.components.forEach(function (criterion) {
-    console.log("Criterion",evaluateDatum(datum, [criterion]));
-  });
-  // const testing = evaluateDatum(datum, criteria.data.components);
-  // console.log("test:", testing);
-  // const breakDownData = datum[metricToName[criteria.data.name]];
-  // console.log(breakDownData);
+function exitDonutDrilldown(criteria){
+  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
+
+  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
+
+  metricRatingArc.style("visibility", "visible");
+
+  metricRatingGroup.selectAll(".drilldownData").remove();
 }
 
 function updateDonutChart(target, datum={}, criteria=[]) {

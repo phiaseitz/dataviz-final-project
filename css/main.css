@@ -143,6 +143,7 @@ button {
 #loadingIndicator {
   align-self: center;
 }
+<<<<<<< 59eae88275fddbdf43d8ea37ae364f872d343184
 <<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
 
 .categoryControl {
@@ -219,3 +220,13 @@ input[type=range]:focus::-moz-range-track {
 }
 =======
 >>>>>>> Category controls generated and effective, but need to force refresh
+=======
+
+.rating {
+  pointer-events: none;
+}
+
+.drilldownData{
+  pointer-events: none;
+}
+>>>>>>> Split arcs on mouseover
