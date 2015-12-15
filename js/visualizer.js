@@ -433,6 +433,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("dy", "1.2em")
     .attr("x", 0)
     .attr("font-size", "16px")
+    .text("stars");
 }
 
 function updateDonutChart(target, datum, criteria=[]) {
@@ -472,7 +473,6 @@ function updateDonutChart(target, datum, criteria=[]) {
   const newPieData = updatePie(criteria);
     
   //Animate the new radius. 
-
   const criteriaGroups = viz.selectAll(".arc");
 
   //Add new radius information here. We'll do the same with 
