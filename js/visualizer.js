@@ -341,8 +341,7 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
-  const textRadius = maxRadius + 20; // padding = 20
-
+  const textRadius = maxRadius *1.15; 
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
     .range([minRadius, maxRadius]);
@@ -376,8 +375,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .sort(null)
     .value(d => d.weight);
 
-  console.log("criteria",criteria);
-
   const g = viz.selectAll(".arc")
     .data(pie(criteria))
     .enter()
@@ -396,10 +393,14 @@ function addDonutChart(target, datum, criteria=[]) {
   viz.append("text")
     .attr("x", 0) //centered w/ transform
     .attr("y", 0) //center w/ transform
+    .attr("font-size", "30px")
     .attr("text-anchor", "middle")
-    .text("%%")
-    .append("text")
-    .text("rating");
+    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
+    .append("tspan")
+    .attr("dy", "1.2em")
+    .attr("x", 0)
+    .attr("font-size", "16px")
+    .text("stars");
 }
 
 
