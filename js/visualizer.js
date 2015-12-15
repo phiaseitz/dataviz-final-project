@@ -488,8 +488,9 @@ function updateDonutChart(target, datum, criteria=[]) {
     } else {
       d.newOuter = d.outerRadius;
     }
+    console.log("weidht" , d.data.weight);
     score += d.data.weight * d.normedValue;
-    sumOfWeights += d.data.weight;
+    sumOfWeights += +d.data.weight;
     console.log("score: ", score);
     console.log("sumOfWeights", sumOfWeights);
     //reset everything but the start and end angles
@@ -497,7 +498,7 @@ function updateDonutChart(target, datum, criteria=[]) {
     d.newEnd = newPieData[i].endAngle;
     d.value = newPieData[i].value;
     d.data = newPieData[i].data;
-    console.log(d);
+    console.log("data",d);
   });
 
   const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
