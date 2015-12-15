@@ -503,16 +503,10 @@ function updateDonutChart(target, datum, criteria=[]) {
       return function(t) {
           d.endAngle = interpolateEnd(t);
           d.startAngle = interpolateStart(t);
-      // var interpolateEnd = d3.interpolate(d.endAngle,angle(d.count + d.cumulative));
-      // var interpolateStart = d3.interpolate(d.startAngle,angle(d.cumulative));
-      return function(t) {
-          // d.endAngle = interpolateEnd(t);
-          // d.startAngle = interpolateStart(t);
           d.outerRadius = interpolateRad(t);
           return arc(d);
       };
-    };
-  });
+    });
 
   criteriaGroups.selectAll(".metricLabel")
     .transition()
