@@ -175,7 +175,7 @@ function createOverlay(data, criteria, verbose=false) {
           // Restore circle radius
           d3.select(this).attr("r", 6);
         })
-        .on("click", d => showDetails(d.value, criteria));
+        .on("click", d => updateSidebar(d.value, criteria));
 
 
       function transform(d) {
@@ -305,12 +305,20 @@ function accessValue(datum, keys, verbose=false) {
  *
  * @param  {Object} datum The datum describing a hospital
  * @param  {Object} criteria The criteria by which to evaluate the datum
- */
-function showDetails(datum, criteria) {
-  const sidebar = d3.select('#detailSidebar');
-  sidebar.classed('show', true);
+ * Check if the sidebar is already open. 
+ * If so, update it, otherwise, remove everything and draw it
+ * again*/
 
-  addDonutChart('#hospitalDonut', datum, criteria);
+function updateSidebar(datum, criteria) {
+  const sidebar = d3.select('#detailSidebar');
+  const isShowing = sidebar.classed('show');
+
+  if (isShowing) {
+    updateDonutChart('#hospitalDonut', datum, criteria)
+  } else {
+    sidebar.classed('show', true);
+    addDonutChart('#hospitalDonut', datum, criteria);
+  }
 
   d3.select('#hospitalNameField')
     .text(datum['Hospital'].toLowerCase());
@@ -328,6 +336,7 @@ function showDetails(datum, criteria) {
 
   d3.select('#zipField')
     .text(Address['ZIP']);
+
 }
 
 function addDonutChart(target, datum, criteria=[]) {
@@ -336,6 +345,9 @@ function addDonutChart(target, datum, criteria=[]) {
   // the text on the bottom to be cut-off
 
   const svg = d3.select(target);
+  //Remove everything before drawing it again. 
+  svg.selectAll("*").remove();
+
   const width = svg[0][0].clientWidth;
   svg.attr("height", width); //make SVG square
 
@@ -365,12 +377,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("fill", "lightgray");
 
   const arc = d3.svg.arc()
-    .innerRadius(minRadius)
-    .outerRadius(d => {
-      // d.data is actually a criterion
-      const normedValue = evaluateDatum(datum, [d.data]);
-      return radiusScale(normedValue);
-    });
+    .innerRadius(minRadius);
 
   const labelArc = d3.svg.arc()
     .innerRadius(textRadius)
@@ -386,15 +393,115 @@ function addDonutChart(target, datum, criteria=[]) {
     .append("g")
     .attr("class", "arc");
 
-  g.append("path")
+  g.each(function(d){
+    const normedValue = evaluateDatum(datum, [d.data]);
+    d.outerRadius = radiusScale(normedValue);
+    console.log(d);
+    })
+    .append("path")
     .attr("d", arc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i]);
+    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .attr("class", "criteriaSlice");
 
   g.append("text")
     .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
     .attr("dy", ".35em")
     .attr("text-anchor", "middle")
     .text(d => d.data.name);
+}
+
+function updateDonutChart(target, datum, criteria=[]) {
+
+  // TODO: Add a margin around the chart. Right now, a small width may cause
+  // the text on the bottom to be cut-off
+
+  //TODO: Handle resizing of the window.
+
+  const svg = d3.select(target);
+
+  const viz = svg.select("g");
+
+  const width = svg[0][0].clientWidth;
+
+  const maxRadius = 0.4 * width;
+  const minRadius = 0.2 * width;
+  const textRadius = maxRadius + 20; // padding = 20
+
+  const radiusScale = d3.scale.linear()
+    .domain([0, 1])
+    .range([minRadius, maxRadius]);
+
+  // // Background circle (shows "maxValue")
+  // const bkgArc = d3.svg.arc()
+  //   .outerRadius(maxRadius)
+  //   .innerRadius(minRadius)
+  //   .startAngle(0)
+  //   .endAngle(2*Math.PI);
+
+  // viz.append("g")
+  //   .attr("class", "bkgArc")
+  //   .append("path")
+  //   .attr("d", bkgArc)
+  //   .attr("fill", "lightgray");
+
+  const arc = d3.svg.arc()
+    .innerRadius(minRadius);
+    // .outerRadius(d => {
+    //   // d.data is actually a criterion
+    //   const normedValue = evaluateDatum(datum, [d.data]);
+    //   return radiusScale(normedValue);
+    // });
+
+  //Animate the new radius. 
+
+
+  // const labelArc = d3.svg.arc()
+  //   .innerRadius(textRadius)
+  //   .outerRadius(textRadius);
+
+  // const pie = d3.layout.pie()
+  //   .sort(null)
+  //   .value(d => d.weight);
+
+  const criteriaGroups = viz.selectAll(".arc");
+
+  //Add new radius information here. We'll do the same with 
+  //new angle information shortly. 
+  criteriaGroups.each(function(d){
+    const normedValue = evaluateDatum(datum, [d.data]);
+    d.newOuter = radiusScale(normedValue);
+    console.log(d);
+  });
+
+  const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
+
+  criteriaArcs.transition()
+    .duration(1000)
+    .attrTween("d", function(d,i) {
+      var interpolateRad = d3.interpolate(d.outerRadius, d.newOuter);
+      // var interpolateEnd = d3.interpolate(d.endAngle,angle(d.count + d.cumulative));
+      // var interpolateStart = d3.interpolate(d.startAngle,angle(d.cumulative));
+      return function(t) {
+          // d.endAngle = interpolateEnd(t);
+          // d.startAngle = interpolateStart(t);
+          d.outerRadius = interpolateRad(t);
+          return arc(d);
+      };
+    });
+  //   .data(pie(criteria))
+  //   .enter()
+  //   .append("g")
+  //   .attr("class", "arc");
+
+  // g.append("path")
+  //   .attr("d", arc)
+  //   .style("fill", (d, i) =>  DONUT_COLORS[i]);
+
+  // g.append("text")
+  //   .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
+  //   .attr("dy", ".35em")
+  //   .attr("text-anchor", "middle")
+  //   .text(d => d.data.name);
 }
 
 /**
