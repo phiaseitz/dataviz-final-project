@@ -367,15 +367,7 @@ function addDonutChart(target, datum, criteria=[]) {
   // Background circle (shows "maxValue")
   const bkgArc = d3.svg.arc()
     .outerRadius(maxRadius)
-    .innerRadius(minRadius)
-    .startAngle(0)
-    .endAngle(2*Math.PI);
-
-  viz.append("g")
-    .attr("class", "bkgArc")
-    .append("path")
-    .attr("d", bkgArc)
-    .attr("fill", "lightgray");
+    .innerRadius(minRadius);
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
@@ -409,6 +401,12 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("d", arc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
     .attr("class", "criteriaSlice");
+
+  g.append("path")
+    .attr("d", bkgArc)
+    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .style('opacity', 0.1)
+    .attr("class", "bkgArc");
 
   g.append("text")
     .attr("dy", ".35em")
