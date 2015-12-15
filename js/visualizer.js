@@ -444,6 +444,10 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     .append("path")
     .attr("d", arc)
     .style("fill", color)
+    .style("opacity", function(d,i) {
+      const percentThroughCriteria = i/(criteria.data.components.length -1);
+      return opacityScale(percentThroughCriteria);
+    })
     .style("stroke-width", 2)
     .style("stroke", "white");
 
