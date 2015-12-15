@@ -146,6 +146,7 @@ button {
 <<<<<<< 59eae88275fddbdf43d8ea37ae364f872d343184
 <<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
 
+<<<<<<< 5ad2c385fde92a8aea1fb78ec8606659ede36d5d
 .categoryControl {
   display: flex;
   flex-direction: column;
@@ -217,6 +218,14 @@ input[type=range]::-moz-range-thumb {
 
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
+=======
+.rating {
+  pointer-events: none;
+}
+
+.drilldownData{
+  pointer-events: none;
+>>>>>>> Split arcs on mouseover
 }
 =======
 >>>>>>> Category controls generated and effective, but need to force refresh

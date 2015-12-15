@@ -339,11 +339,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("id", d => d.data.name + "rating")
     .attr("class", "rating");
 
-  g.append("path")
-    .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .style('opacity', 0.1)
-    .attr("class", "bkgArc");
 
   g.append("path")
     .attr("d", bkgArc)
@@ -433,28 +428,22 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     .startAngle(criteria.startAngle)
     .endAngle(criteria.endAngle);
 
-  const drilldownGroup = metricRatingGroup.selectAll(".drilldown")
-    .append("g")
-    .attr("class", "drilldown")
-    .attr("id", criteria.data.name + "Drilldown");
-
-  const drilldown = drilldownGroup.selectAll(".drilldownMetric")
+  const drilldown = metricRatingGroup.selectAll(".drilldownData")
     .data(drilldownPie(criteria.data.components))
     .enter()
     .append("g")
-    .attr("class", "drilldownMetric");
+    .attr("class", "drilldownData");
 
   //For some reason I can't get the arcs to animate, so, they don't animate here. 
   drilldown.each(function (d) {
       d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
+
+      console.log(d.outerRadius);
+      console.log(d.newOuter);
     })
     .append("path")
     .attr("d", arc)
-    .style("fill", function(d,i){
-      const percentThrough = i/(criteria.data.components.length);
-      //offset the percent though so we don't get a white square
-      return drilldownColor(0.75*percentThrough + 0.25);
-    })
+    .style("fill", color)
     .style("stroke-width", 2)
     .style("stroke", "white");
 
@@ -491,7 +480,6 @@ function exitDonutDrilldown(criteria){
 
   metricRatingGroup.selectAll(".drilldownData").remove();
 }
-
 
 function updateDonutChart(target, datum={}, criteria=[]) {
   // TODO: Add a margin around the chart. Right now, a small width may cause
@@ -595,6 +583,16 @@ function updateDonutChart(target, datum={}, criteria=[]) {
 function updateMapOverlay(){
   overlay.setMap(null);
   overlay.setMap(map);
+}
+
+function exitDonutDrilldown(criteria){
+  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
+
+  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
+
+  metricRatingArc.style("visibility", "visible");
+
+  metricRatingGroup.selectAll(".drilldownData").remove();
 }
 /**
 node-ztable
