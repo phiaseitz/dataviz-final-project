@@ -136,3 +136,11 @@ button {
 #loadingIndicator {
   align-self: center;
 }
+
+.rating {
+  pointer-events: none;
+}
+
+.drilldownData{
+  pointer-events: none;
+}

@@ -352,12 +352,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .innerRadius(minRadius);
 
   const arc = d3.svg.arc()
-    .innerRadius(minRadius)
-    .outerRadius(d => {
-      // d.data is actually a criterion
-      const normedValue = evaluateDatum(datum, [d.data]);
-      return radiusScale(normedValue);
-    });
+    .innerRadius(minRadius);
 
   const labelArc = d3.svg.arc()
     .innerRadius(textRadius)
@@ -375,7 +370,10 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("class", "metricGroup")
     .attr("id", d => d.data.name + "Group");
 
-  g.append("path")
+  g.each(function(d) {
+    d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
+  })
+    .append("path")
     .attr("d", arc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
     .attr("id", d => d.data.name + "rating")
@@ -387,15 +385,12 @@ function addDonutChart(target, datum, criteria=[]) {
     .style('opacity', 0.2)
     .attr("id", d => d.data.name + "bkg")
     .attr("class", "bkgArc")
-    .on("mouseover", function(d){
-      donutDrilldown(datum, d);
+    .on("mouseover", function(d,i){
+      donutDrilldown(datum, d, radiusScale, arc, DONUT_COLORS[i]);
+    })
+    .on("mouseout", function(d){
+      exitDonutDrilldown(d);
     });
-
-  g.append("path")
-    .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .style('opacity', 0.1)
-    .attr("class", "bkgArc");
 
   g.append("text")
     .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
@@ -415,7 +410,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("stars");
 }
 
-function donutDrilldown(datum, criteria){
+function donutDrilldown(datum, criteria, radiusScale, arc, color){
   console.log("datum: ", datum);
   console.log("criteria: ", criteria);
 
@@ -432,39 +427,36 @@ function donutDrilldown(datum, criteria){
     .startAngle(criteria.startAngle)
     .endAngle(criteria.endAngle);
 
-  const drilldownGroup = metricRatingGroup.selectAll(".drilldown")
-    .append("g")
-    .attr("class", "drilldown")
-    .attr("id", criteria.data.name + "Drilldown");
-
-  const drilldown = drilldownGroup.selectAll(".drilldownMetric")
+  const drilldown = metricRatingGroup.selectAll(".drilldownData")
     .data(drilldownPie(criteria.data.components))
     .enter()
     .append("g")
-    .attr("class", "drilldownMetric");
+    .attr("class", "drilldownData");
 
-  console.log();
+  //For some reason I can't get the arcs to animate, so, they don't animate here. 
+  drilldown.each(function (d) {
+      d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
 
-  // const metricToName = {
-  //   Affordability: "Payment",
-  //   Comfort: "StarRatings",
-  //   Quality: "ReadmissionsAndDeaths"
-  // };
+      console.log(d.outerRadius);
+      console.log(d.newOuter);
+    })
+    .append("path")
+    .attr("d", arc)
+    .style("fill", color)
+    .style("stroke-width", 2)
+    .style("stroke", "white");
 
-  // const drilldownData = drilldownGroup.
-
-  criteria.data.components.forEach(function (criterion) {
-    console.log("Criterion",evaluateDatum(datum, [criterion]));
-  });
-  // const testing = evaluateDatum(datum, criteria.data.components);
-  // console.log("test:", testing);
-  // const breakDownData = datum[metricToName[criteria.data.name]];
-  // console.log(breakDownData);
+    //TODO: Draw the legend and decide what that should look like. 
 }
 
-function updateMapOverlay(){
-  overlay.setMap(null);
-  overlay.setMap(map);
+function exitDonutDrilldown(criteria){
+  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
+
+  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
+
+  metricRatingArc.style("visibility", "visible");
+
+  metricRatingGroup.selectAll(".drilldownData").remove();
 }
 
 /**
