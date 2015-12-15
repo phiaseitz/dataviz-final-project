@@ -391,6 +391,12 @@ function addDonutChart(target, datum, criteria=[]) {
       donutDrilldown(datum, d);
     });
 
+  g.append("path")
+    .attr("d", bkgArc)
+    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .style('opacity', 0.1)
+    .attr("class", "bkgArc");
+
   g.append("text")
     .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
     .attr("text-anchor", "middle")
@@ -454,6 +460,11 @@ function donutDrilldown(datum, criteria){
   // console.log("test:", testing);
   // const breakDownData = datum[metricToName[criteria.data.name]];
   // console.log(breakDownData);
+}
+
+function updateMapOverlay(){
+  overlay.setMap(null);
+  overlay.setMap(map);
 }
 
 /**
