@@ -312,18 +312,19 @@ function accessValue(datum, keys, verbose=false) {
 function updateSidebar(datum, criteria) {
   const sidebar = d3.select('#detailSidebar');
   const isShowing = sidebar.classed('show');
+  const haveData = !(_.isEmpty(datum));
 
   //Update either the radius or the angle
   if (isShowing) {
     updateDonutChart('#hospitalDonut', datum, criteria)
   //This is the case where we have clicked on a hospital
-  } else if (!isShowing && datum !== {}) {
+  } else if (!isShowing && haveData) {
     sidebar.classed('show', true);
     addDonutChart('#hospitalDonut', datum, criteria);
   }
 
   //If we clicked on a hospital, update the data
-  if (datum !== {}){
+  if (haveData){
     d3.select('#hospitalNameField')
     .text(datum['Hospital'].toLowerCase());
 
@@ -441,7 +442,7 @@ function updateDonutChart(target, datum, criteria=[]) {
   const minRadius = 0.2 * width;
   const textRadius = maxRadius + 20; // padding = 20
 
-  const isUpdatingRadius = datum !== {};
+  const isUpdatingRadius = !(_.isEmpty(datum));
 
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
@@ -462,6 +463,12 @@ function updateDonutChart(target, datum, criteria=[]) {
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
+
+  const updatePie = d3.layout.pie()
+    .sort(null)
+    .value(d => d.weight);
+
+  const newPieData = updatePie(criteria);
     
   //Animate the new radius. 
 
@@ -470,17 +477,22 @@ function updateDonutChart(target, datum, criteria=[]) {
   //   .innerRadius(textRadius)
   //   .outerRadius(textRadius);
 
-  // const pie = d3.layout.pie()
-  //   .sort(null)
-  //   .value(d => d.weight);
-
   const criteriaGroups = viz.selectAll(".arc");
 
   //Add new radius information here. We'll do the same with 
   //new angle information shortly. 
-  criteriaGroups.each(function(d){
-    const normedValue = evaluateDatum(datum, [d.data]);
-    d.newOuter = radiusScale(normedValue);
+  criteriaGroups.each(function(d,i){
+    if (isUpdatingRadius) {
+      const normedValue = evaluateDatum(datum, [d.data]);
+      d.newOuter = radiusScale(normedValue);
+    } else {
+      d.newOuter = d.outerRadius;
+    }
+    //reset everything but the start and end angles
+    d.newStart = newPieData[i].startAngle;
+    d.newEnd = newPieData[i].endAngle;
+    d.value = newPieData[i].value;
+    d.data = newPieData[i].data;
     console.log(d);
   });
 
@@ -490,11 +502,11 @@ function updateDonutChart(target, datum, criteria=[]) {
     .duration(1000)
     .attrTween("d", function(d,i) {
       var interpolateRad = d3.interpolate(d.outerRadius, d.newOuter);
-      // var interpolateEnd = d3.interpolate(d.endAngle,angle(d.count + d.cumulative));
-      // var interpolateStart = d3.interpolate(d.startAngle,angle(d.cumulative));
+      var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
+      var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
       return function(t) {
-          // d.endAngle = interpolateEnd(t);
-          // d.startAngle = interpolateStart(t);
+          d.endAngle = interpolateEnd(t);
+          d.startAngle = interpolateStart(t);
           d.outerRadius = interpolateRad(t);
           return arc(d);
       };
