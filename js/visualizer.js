@@ -313,30 +313,34 @@ function updateSidebar(datum, criteria) {
   const sidebar = d3.select('#detailSidebar');
   const isShowing = sidebar.classed('show');
 
+  //Update either the radius or the angle
   if (isShowing) {
     updateDonutChart('#hospitalDonut', datum, criteria)
-  } else {
+  //This is the case where we have clicked on a hospital
+  } else if (!isShowing && datum !== {}) {
     sidebar.classed('show', true);
     addDonutChart('#hospitalDonut', datum, criteria);
   }
 
-  d3.select('#hospitalNameField')
+  //If we clicked on a hospital, update the data
+  if (datum !== {}){
+    d3.select('#hospitalNameField')
     .text(datum['Hospital'].toLowerCase());
 
-  const { Address } = datum;
+    const { Address } = datum;
 
-  d3.select('#addressField')
-    .text(Address['StreetAddress'].toLowerCase());
+    d3.select('#addressField')
+      .text(Address['StreetAddress'].toLowerCase());
 
-  d3.select('#cityField')
-    .text(Address['City'].toLowerCase());
+    d3.select('#cityField')
+      .text(Address['City'].toLowerCase());
 
-  d3.select('#stateField')
-    .text(Address['State']);
+    d3.select('#stateField')
+      .text(Address['State']);
 
-  d3.select('#zipField')
-    .text(Address['ZIP']);
-
+    d3.select('#zipField')
+      .text(Address['ZIP']);
+    }  
 }
 
 function addDonutChart(target, datum, criteria=[]) {
@@ -427,6 +431,8 @@ function updateDonutChart(target, datum, criteria=[]) {
   const minRadius = 0.2 * width;
   const textRadius = maxRadius + 20; // padding = 20
 
+  const isUpdatingRadius = datum !== {};
+
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
     .range([minRadius, maxRadius]);
@@ -446,12 +452,7 @@ function updateDonutChart(target, datum, criteria=[]) {
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
-    // .outerRadius(d => {
-    //   // d.data is actually a criterion
-    //   const normedValue = evaluateDatum(datum, [d.data]);
-    //   return radiusScale(normedValue);
-    // });
-
+    
   //Animate the new radius. 
 
 
@@ -579,6 +580,7 @@ function createCategoryControls(target, criteria) {
     .on("change", function (criterion, index) {
       // Note: this mutates the critera object
       criterion["weight"] = this.value;
+      updateSidebar({}, criteria);
       // TODO: Regenerate hospital colors and donut chart
     })
 }
