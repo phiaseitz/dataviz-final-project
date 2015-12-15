@@ -311,7 +311,7 @@ function showDetails(datum, criteria) {
   d3.select('#hospitalNameField')
     .text(datum['Hospital'].toLowerCase());
 
-  const { Address } = datum;
+  const { Address } = datum; 
 
   d3.select('#addressField')
     .text(Address['StreetAddress'].toLowerCase());
@@ -341,8 +341,7 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
-  const textRadius = maxRadius + 20; // padding = 20
-
+  const textRadius = maxRadius *1.15; 
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
     .range([minRadius, maxRadius]);
@@ -388,10 +387,23 @@ function addDonutChart(target, datum, criteria=[]) {
 
   g.append("text")
     .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
-    .attr("dy", ".35em")
     .attr("text-anchor", "middle")
     .text(d => d.data.name);
+
+  viz.append("text")
+    .attr("x", 0) //centered w/ transform
+    .attr("y", 0) //center w/ transform
+    .attr("font-size", "30px")
+    .attr("text-anchor", "middle")
+    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
+    .append("tspan")
+    .attr("dy", "1.2em")
+    .attr("x", 0)
+    .attr("font-size", "16px")
+    .text("stars");
 }
+
+
 
 /**
 node-ztable
