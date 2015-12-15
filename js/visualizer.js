@@ -398,8 +398,8 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("class", "arc");
 
   g.each(function(d){
-    const normedValue = evaluateDatum(datum, [d.data]);
-    d.outerRadius = radiusScale(normedValue);
+    d.normedValue = evaluateDatum(datum, [d.data]);
+    d.outerRadius = radiusScale(d.normedValue);
     console.log(d);
     })
     .append("path")
@@ -423,6 +423,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("class", "metricLabel");
 
   viz.append("text")
+    .attr("class", "stars")
     .attr("x", 0) //centered w/ transform
     .attr("y", 0) //center w/ transform
     .attr("font-size", "30px")
@@ -452,6 +453,9 @@ function updateDonutChart(target, datum, criteria=[]) {
   const minRadius = 0.2 * width;
   const textRadius = maxRadius + 20; // padding = 20
 
+  var score = 0;
+  var sumOfWeights = 0;
+
   const isUpdatingRadius = !(_.isEmpty(datum));
 
   const radiusScale = d3.scale.linear()
@@ -478,11 +482,15 @@ function updateDonutChart(target, datum, criteria=[]) {
   //new angle information shortly. 
   criteriaGroups.each(function(d,i){
     if (isUpdatingRadius) {
-      const normedValue = evaluateDatum(datum, [d.data]);
-      d.newOuter = radiusScale(normedValue);
+      d.normedValue = evaluateDatum(datum, [d.data]);
+      d.newOuter = radiusScale(d.normedValue);
     } else {
       d.newOuter = d.outerRadius;
     }
+    score += d.data.weight * d.normedValue;
+    sumOfWeights += d.data.weight;
+    console.log("score: ", score);
+    console.log("sumOfWeights", sumOfWeights);
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
@@ -519,6 +527,11 @@ function updateDonutChart(target, datum, criteria=[]) {
       const textAngle = (d.newEnd + d.newStart)/2;
       return -textRadius * Math.cos(textAngle);
     });
+
+  viz.selectAll(".stars")
+    .text(d3.round((score/sumOfWeights)*5, 2) + " / 5");
+  
+    
 }
 
 /**
