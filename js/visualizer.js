@@ -493,6 +493,7 @@ function exitDonutDrilldown(criteria){
   metricRatingGroup.selectAll(".drilldownData").remove();
 }
 
+
 function updateDonutChart(target, datum={}, criteria=[]) {
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
@@ -596,7 +597,6 @@ function updateMapOverlay(){
   overlay.setMap(null);
   overlay.setMap(map);
 }
-
 /**
 node-ztable
 -----------
