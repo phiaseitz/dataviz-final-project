@@ -408,23 +408,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("class", "criteriaSlice");
 
   g.append("text")
-<<<<<<< ed2da8edfd61c5ec2bb42750a055ab0454380385
-    .attr("transform", d => `translate( ${labelArc.centroid(d)})`)
-    .attr("text-anchor", "middle")
-    .text(d => d.data.name);
-
-  viz.append("text")
-    .attr("x", 0) //centered w/ transform
-    .attr("y", 0) //center w/ transform
-    .attr("font-size", "30px")
-    .attr("text-anchor", "middle")
-    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
-    .append("tspan")
-    .attr("dy", "1.2em")
-    .attr("x", 0)
-    .attr("font-size", "16px")
-    .text("stars");
-=======
     .attr("dy", ".35em")
     .attr("x", function (d) {
       const textAngle = (d.endAngle + d.startAngle)/2;
@@ -438,7 +421,18 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("text-anchor", "middle")
     .text(d => d.data.name)
     .attr("class", "metricLabel");
->>>>>>> restructuring how the text is displayed to work with changing angles
+
+  viz.append("text")
+    .attr("x", 0) //centered w/ transform
+    .attr("y", 0) //center w/ transform
+    .attr("font-size", "30px")
+    .attr("text-anchor", "middle")
+    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
+    .append("tspan")
+    .attr("dy", "1.2em")
+    .attr("x", 0)
+    .attr("font-size", "16px")
+    .text("stars");
 }
 
 function updateDonutChart(target, datum, criteria=[]) {
