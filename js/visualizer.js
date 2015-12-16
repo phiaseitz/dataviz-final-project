@@ -707,6 +707,10 @@ function bindControls(criteria) {
 }
 
 function createCategoryControls(target, criteria) {
+   target.append("h3")
+    .text('I care most about...')
+    .attr("class", "control-header");
+    
   const categoryControls = target.append("div")
     .attr("id", "categoryControls")
     .selectAll(".categoryControl")
