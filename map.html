@@ -31,7 +31,7 @@
         </button>
       </div>
       <div class="sidebarContent">
-        <svg id="hospitalDonut" width="100%" height = "75%"></svg>
+        <svg id="hospitalDonut"></svg>
         <h3 id="hospitalNameField"></h3>
         <div id="addressBlock">
           <h4 id="addressHeader">Address</h4>
@@ -52,8 +52,10 @@
         onclick="var t = d3.select('#settingsSidebar'); t.classed('show', !t.classed('show')); ">
         [ Settings ]
       </button>
-      <div id="controls">
-         <div id="loadingIndicator">-- LOADING --</div>
+      <div class="sidebarContent">
+        <div id="controls">
+           <div id="loadingIndicator">-- LOADING --</div>
+        </div>
       </div>
     </aside>
 
