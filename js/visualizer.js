@@ -416,9 +416,6 @@ function addDonutChart(target, datum, criteria=[]) {
 }
 
 function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
-  console.log("datum: ", datum);
-  console.log("criteria: ", criteria);
-
   const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
 
   const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
@@ -456,28 +453,28 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     .style("stroke-width", 2)
     .style("stroke", "white");
 
-    //Add the legend
-    drilldown.append("rect")
-      .attr("x", -100)
-      .attr("y", function(d,i){
-        return -(maxRadius +50 + (i) *25);
-      })
-      .attr("width", 20)
-      .attr("height", 20)
-      .attr("fill", function(d,i){
-        const percentThrough = i/(criteria.data.components.length);
-        //offset the percent though so we don't get a white square
-        return drilldownColor(0.75*percentThrough + 0.25);
-      });
+  //Add the legend
+  drilldown.append("rect")
+    .attr("x", -100)
+    .attr("y", function(d,i){
+      return -(maxRadius +50 + (i) *25);
+    })
+    .attr("width", 20)
+    .attr("height", 20)
+    .attr("fill", function(d,i){
+      const percentThrough = i/(criteria.data.components.length);
+      //offset the percent though so we don't get a white square
+      return drilldownColor(0.75*percentThrough + 0.25);
+    });
 
-    drilldown.append("text")
-      .attr("x", -75)
-      .attr("y", function(d,i){
-        return -(maxRadius +50 + (i) *25);
-      })
-      .attr("dy", "1em")
-      .attr("font-size", "14px")
-      .text(d => d.data.name);
+  drilldown.append("text")
+    .attr("x", -75)
+    .attr("y", function(d,i){
+      return -(maxRadius +50 + (i) *25);
+    })
+    .attr("dy", "1em")
+    .attr("font-size", "14px")
+    .text(d => d.data.name);
 }
 
 function exitDonutDrilldown(criteria){
