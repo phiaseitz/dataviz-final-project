@@ -491,8 +491,8 @@ function exitDonutDrilldown(criteria){
   const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
   const natAvgLine = d3.select("#" + criteria.data.name + "natAvgLine");
 
-  metricRatingArc.style("visibility", "hidden");
-  natAvgLine.style("visibility","hidden");
+  metricRatingArc.style("visibility", "visible");
+  natAvgLine.style("visibility","visible");
 
   const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
   metricRatingGroup.selectAll(".drilldownData").remove();
