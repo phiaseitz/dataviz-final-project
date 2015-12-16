@@ -333,11 +333,11 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const svg = d3.select(target);
   const width = svg[0][0].clientWidth;
-  svg.attr("height", width); //make SVG square
+  const height = svg[0][0].clientHeight;
 
   // Center donut viz in square SVG
   const viz = svg.append("g")
-    .attr("transform", `translate( ${width/2}, ${width/2})`);
+    .attr("transform", `translate( ${width/2}, ${height - width/2})`);
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
@@ -386,7 +386,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("id", d => d.data.name + "bkg")
     .attr("class", "bkgArc")
     .on("mouseover", function(d,i){
-      donutDrilldown(datum, d, radiusScale, arc, DONUT_COLORS[i]);
+      donutDrilldown(datum, d, radiusScale, arc, DONUT_COLORS[i], maxRadius);
     })
     .on("mouseout", function(d){
       exitDonutDrilldown(d);
@@ -410,7 +410,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("stars");
 }
 
-function donutDrilldown(datum, criteria, radiusScale, arc, color){
+function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
   console.log("datum: ", datum);
   console.log("criteria: ", criteria);
 
@@ -420,9 +420,9 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color){
 
   metricRatingArc.style("visibility", "hidden");
 
-  const opacityScale = d3.scale.linear()
+  const drilldownColor = d3.scale.linear()
     .domain([0, 1])
-    .range([0.5, 1]);
+    .range(["#FFFFFF", color]);
 
   const drilldownPie = d3.layout.pie()
     .sort(null)
@@ -440,21 +440,39 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color){
   //For some reason I can't get the arcs to animate, so, they don't animate here. 
   drilldown.each(function (d) {
       d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
-
-      console.log(d.outerRadius);
-      console.log(d.newOuter);
     })
     .append("path")
     .attr("d", arc)
-    .style("fill", color)
-    .style("opacity", function(d,i) {
-      const percentThroughCriteria = i/(criteria.data.components.length -1);
-      return opacityScale(percentThroughCriteria);
+    .style("fill", function(d,i){
+      const percentThrough = i/(criteria.data.components.length);
+      //offset the percent though so we don't get a white square
+      return drilldownColor(0.75*percentThrough + 0.25);
     })
     .style("stroke-width", 2)
     .style("stroke", "white");
 
-    //TODO: Draw the legend and decide what that should look like. 
+    //Add the legend
+    drilldown.append("rect")
+      .attr("x", -100)
+      .attr("y", function(d,i){
+        return -(maxRadius +50 + (i) *25);
+      })
+      .attr("width", 20)
+      .attr("height", 20)
+      .attr("fill", function(d,i){
+        const percentThrough = i/(criteria.data.components.length);
+        //offset the percent though so we don't get a white square
+        return drilldownColor(0.75*percentThrough + 0.25);
+      });
+
+    drilldown.append("text")
+      .attr("x", -75)
+      .attr("y", function(d,i){
+        return -(maxRadius +50 + (i) *25);
+      })
+      .attr("dy", "1em")
+      .attr("font-size", "14px")
+      .text(d => d.data.name);
 }
 
 function exitDonutDrilldown(criteria){
