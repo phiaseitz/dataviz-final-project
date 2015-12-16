@@ -309,8 +309,7 @@ function accessValue(datum, keys, verbose=false) {
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
-//THIS IS THE MISSING CURLY BRACE
-function updateSidebar(datum, criteria) {
+function updateSidebar(datum={}, criteria=[]) {
   const sidebar = d3.select('#detailSidebar');
   const isShowing = sidebar.classed('show');
   const haveData = !(_.isEmpty(datum));
@@ -330,6 +329,7 @@ function updateSidebar(datum, criteria) {
     .text(datum['Hospital'].toLowerCase());
 
     const { Address } = datum;
+
     d3.select('#addressField')
       .text(Address['StreetAddress'].toLowerCase());
 
@@ -362,7 +362,11 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
-  const textRadius = maxRadius * 1.15;
+
+  const textRadius = maxRadius *1.15;
+  const radiusScale = d3.scale.linear()
+    .domain([0, 1])
+    .range([minRadius, maxRadius]);
 
   // Background circle (shows "maxValue")
   const bkgArc = d3.svg.arc()
@@ -414,7 +418,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("dy", ".35em")
     .attr("x", function (d) {
       const textAngle = (d.endAngle + d.startAngle)/2;
-      console.log(textAngle);
       return textRadius * Math.sin(textAngle);
     })
     .attr("y", function(d){
@@ -439,8 +442,8 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("stars");
 }
 
-function updateDonutChart(target, datum, criteria=[]) {
 
+function updateDonutChart(target, datum={}, criteria=[]) {
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
 
@@ -454,6 +457,7 @@ function updateDonutChart(target, datum, criteria=[]) {
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
+
   const textRadius = maxRadius + 20; // padding = 20
 
   var score = 0;
@@ -477,30 +481,25 @@ function updateDonutChart(target, datum, criteria=[]) {
     .value(d => d.weight);
 
   const newPieData = updatePie(criteria);
-    
-  //Animate the new radius. 
+
+  //Animate the new radius.
   const criteriaGroups = viz.selectAll(".arc");
 
-  //Add new radius information here. We'll do the same with 
-  //new angle information shortly. 
+  //Add new radius information here. We'll do the same with
+  //new angle information shortly.
   criteriaGroups.each(function(d,i){
     if (isUpdatingRadius) {
       d.normedValue = evaluateDatum(datum, [d.data]);
       d.newOuter = radiusScale(d.normedValue);
-    } else {
-      d.newOuter = d.outerRadius;
-    }
-    console.log("weidht" , d.data.weight);
+    } else d.newOuter = d.outerRadius;
+
     score += d.data.weight * d.normedValue;
     sumOfWeights += +d.data.weight;
-    console.log("score: ", score);
-    console.log("sumOfWeights", sumOfWeights);
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
     d.value = newPieData[i].value;
     d.data = newPieData[i].data;
-    console.log("data",d);
   });
 
   const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
@@ -524,7 +523,6 @@ function updateDonutChart(target, datum, criteria=[]) {
     .duration(1000)
     .attr("x", function (d) {
       const textAngle = (d.newEnd + d.newStart)/2;
-      console.log(textAngle);
       return textRadius * Math.sin(textAngle);
     })
     .attr("y", function(d){
@@ -532,10 +530,16 @@ function updateDonutChart(target, datum, criteria=[]) {
       return -textRadius * Math.cos(textAngle);
     });
 
+  const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
   viz.selectAll(".stars")
-    .text(d3.round((score/sumOfWeights)*5, 2) + " / 5");
-  
-    
+    .text(starRating + " / 5")
+    .append("tspan")
+    .attr("dy", "1.2em")
+    .attr("x", 0)
+    .attr("font-size", "16px")
+    .text("stars")
+    .style("text-transform", "none");
+
 }
 
 /**
@@ -616,6 +620,45 @@ function createCategoryControls(target, criteria) {
       updateSidebar({}, criteria);
 
       // TODO: Regenerate hospital colors
+    })
+}
+
+function bindControls(criteria) {
+  d3.select("#loadingIndicator").remove();
+  const controls = d3.select("#controls");
+  createCategoryControls(controls, criteria);
+}
+
+function createCategoryControls(target, criteria) {
+  target.append("h3")
+    .text('I care most about...')
+    .attr("class", "control-header");
+
+  const categoryControls = target.append("div")
+    .attr("id", "categoryControls")
+    .selectAll(".categoryControl")
+    .data(criteria)
+    .enter()
+    .append("div")
+    .attr("class", "categoryControl");
+
+
+  categoryControls.append("label")
+    .text(criterion => criterion.name)
+    .attr("class", "slider-heading");
+
+  categoryControls.append("input")
+    .attr({
+      type: "range",
+      value: criterion => criterion["weight"],
+      max: 1,
+      step: 0.05,
+    })
+    .on("change", function (criterion, index) {
+      // Note: this mutates the criteria object
+      criterion["weight"] = Number(this.value);
+      updateSidebar({}, criteria);
+      // TODO: Regenerate hospital colors and donut chart
     })
 }
 

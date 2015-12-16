@@ -210,8 +210,3 @@ input[type=range]::-moz-range-thumb {
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
 }
-<<<<<<< 302016365adc97d4b88e4054850b752f46f9e8e2
-=======
->>>>>>> Category controls generated and effective, but need to force refresh
-=======
->>>>>>> Improved slider styling.
