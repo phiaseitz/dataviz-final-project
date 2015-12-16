@@ -80,7 +80,9 @@ function createOverlay(data, criteria, verbose=false) {
               left: circle[0][0].offsetParent.offsetLeft + 20 + "px",
               top: circle[0][0].offsetParent.offsetTop + "px",
             })
-            .text(d.value["Hospital"].toLowerCase());
+            .text(d.value["Hospital"].toLowerCase())
+            .style("font-family", "Source Sans Pro")
+            .style("font-size","14px");
 
           // Increase circle radius
           d3.select(this).attr("r", 8);
@@ -114,7 +116,12 @@ function createOverlay(data, criteria, verbose=false) {
           currentSelection.classed("selectedHospital", true)
             .attr("fill", "#FF6542");
         });
-
+        
+        layer.append("div")
+          .attr("id", "tooltip")
+          .style({position: "absolute",
+                  width:'100px',
+                  padding: "2px"});
 
       function transform(d) {
         d = new google.maps.LatLng(d.value["Lat"], d.value["Long"]);
