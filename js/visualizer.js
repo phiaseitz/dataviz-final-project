@@ -586,15 +586,6 @@ function updateMapOverlay(){
   overlay.setMap(map);
 }
 
-function exitDonutDrilldown(criteria){
-  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
-
-  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
-
-  metricRatingArc.style("visibility", "visible");
-
-  metricRatingGroup.selectAll(".drilldownData").remove();
-}
 /**
 node-ztable
 -----------
