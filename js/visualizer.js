@@ -175,7 +175,27 @@ function createOverlay(data, criteria, verbose=false) {
           // Restore circle radius
           d3.select(this).attr("r", 6);
         })
-        .on("click", d => updateSidebar(d.value, criteria));
+        .on("click", function (d) {
+          updateSidebar(d.value, criteria);
+
+          // Deselect last selection
+          const lastSelection = d3.select(".selectedHospital");
+          if (!lastSelection.empty()) {
+            const normedValue = evaluateDatum(
+              lastSelection.datum().value,
+              criteria
+            );
+
+            lastSelection.classed("selectedHospital", false)
+              .attr("fill", COLORS(normedValue));
+          }
+
+          // Select this element
+          const currentSelection = d3.select(this);
+
+          currentSelection.classed("selectedHospital", true)
+            .attr("fill", "#FF6542");
+        });
 
 
       function transform(d) {
@@ -305,7 +325,7 @@ function accessValue(datum, keys, verbose=false) {
  *
  * @param  {Object} datum The datum describing a hospital
  * @param  {Object} criteria The criteria by which to evaluate the datum
- * Check if the sidebar is already open. 
+ * Check if the sidebar is already open.
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
@@ -350,7 +370,7 @@ function addDonutChart(target, datum, criteria=[]) {
   // the text on the bottom to be cut-off
 
   const svg = d3.select(target);
-  //Remove everything before drawing it again. 
+  //Remove everything before drawing it again.
   svg.selectAll("*").remove();
 
   const width = svg[0][0].clientWidth;
@@ -407,7 +427,6 @@ function addDonutChart(target, datum, criteria=[]) {
     const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
     const desiredArea =  maxArea * d.normedValue;
     d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
-    console.log(d);
     })
     .append("path")
     .attr("d", arc)
@@ -442,9 +461,9 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("stars");
 
   //the national average line. Not creating an arc variable
-  //for this because we don't know any of the parameters 
-  //ahead of time. 
-  //Also, it seems like these are all 0.5, even though the 
+  //for this because we don't know any of the parameters
+  //ahead of time.
+  //Also, it seems like these are all 0.5, even though the
   //mean is not necessarily 50th percentile
   g.append("path")
     .attr("d", d3.svg.arc()
@@ -456,8 +475,8 @@ function addDonutChart(target, datum, criteria=[]) {
         return radiusScale(0.5) + 1;}));
 
   viz.append("line")
-    .style("stroke", "black")  
-    .attr("x1", -100) 
+    .style("stroke", "black")
+    .attr("x1", -100)
     .attr("y1", -(maxRadius + 15))
     .attr("x2", -80)
     .attr("y2",  -(maxRadius + 15))
