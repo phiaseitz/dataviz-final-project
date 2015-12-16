@@ -309,7 +309,7 @@ function accessValue(datum, keys, verbose=false) {
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
-function updateSidebar(datum, criteria) {
+function updateSidebar(datum={}, criteria=[]) {
   const sidebar = d3.select('#detailSidebar');
   const isShowing = sidebar.classed('show');
   const haveData = !(_.isEmpty(datum));
@@ -400,9 +400,7 @@ function addDonutChart(target, datum, criteria=[]) {
   g.each(function(d){
     d.normedValue = evaluateDatum(datum, [d.data]);
     d.outerRadius = radiusScale(d.normedValue);
-    console.log(d);
-    })
-    .append("path")
+  }).append("path")
     .attr("d", arc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
     .attr("class", "criteriaSlice");
@@ -411,7 +409,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("dy", ".35em")
     .attr("x", function (d) {
       const textAngle = (d.endAngle + d.startAngle)/2;
-      console.log(textAngle);
       return textRadius * Math.sin(textAngle);
     })
     .attr("y", function(d){
@@ -436,7 +433,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("stars");
 }
 
-function updateDonutChart(target, datum, criteria=[]) {
+function updateDonutChart(target, datum={}, criteria=[]) {
 
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
@@ -444,14 +441,12 @@ function updateDonutChart(target, datum, criteria=[]) {
   //TODO: Handle resizing of the window.
 
   const svg = d3.select(target);
-
   const viz = svg.select("g");
-
   const width = svg[0][0].clientWidth;
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
-  const textRadius = maxRadius + 20; // padding = 20
+  const textRadius = maxRadius * 1.15;
 
   var score = 0;
   var sumOfWeights = 0;
@@ -518,7 +513,6 @@ function updateDonutChart(target, datum, criteria=[]) {
     .duration(1000)
     .attr("x", function (d) {
       const textAngle = (d.newEnd + d.newStart)/2;
-      console.log(textAngle);
       return textRadius * Math.sin(textAngle);
     })
     .attr("y", function(d){
@@ -526,8 +520,9 @@ function updateDonutChart(target, datum, criteria=[]) {
       return -textRadius * Math.cos(textAngle);
     });
 
+  const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
   viz.selectAll(".stars")
-    .text(d3.round((score/sumOfWeights)*5, 2) + " / 5")
+    .text(starRating + " / 5")
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
@@ -609,8 +604,8 @@ function createCategoryControls(target, criteria) {
       step: 0.05,
     })
     .on("change", function (criterion, index) {
-      // Note: this mutates the critera object
-      criterion["weight"] = this.value;
+      // Note: this mutates the criteria object
+      criterion["weight"] = Number(this.value);
       updateSidebar({}, criteria);
       // TODO: Regenerate hospital colors and donut chart
     })
