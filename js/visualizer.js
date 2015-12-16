@@ -330,7 +330,6 @@ function addDonutChart(target, datum, criteria=[]) {
 
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
-  console.log(criteria);
 
   const svg = d3.select(target);
   const width = svg[0][0].clientWidth;
@@ -391,7 +390,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("text-anchor", "middle")
     .text(d => d.data.name);
 
-<<<<<<< HEAD
   viz.append("text")
     .attr("x", 0) //centered w/ transform
     .attr("y", 0) //center w/ transform
