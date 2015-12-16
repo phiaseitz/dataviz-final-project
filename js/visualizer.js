@@ -770,7 +770,6 @@ function createCategoryControls(target, criteria) {
       // Note: this mutates the critera object
       criterion["weight"] = this.value;
       updateSidebar({}, criteria);
-      updateMapOverlay();
       // TODO: Regenerate hospital colors
     })
 }
