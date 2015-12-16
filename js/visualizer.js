@@ -6,6 +6,9 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 map.setOptions({styles: styles});
+google.maps.event.addDomListener(window, 'load', map);
+
+var overlay = new google.maps.OverlayView();
 
 const COLORS = d3.scale.linear()
   .domain([0, 1])
@@ -20,10 +23,11 @@ Promise.all([
   new Promise((resolve, reject) => d3.json("hospitalData.json", resolve)),
   new Promise((resolve, reject) => d3.json("ratingCriteria.json", resolve)),
 ]).then(values => {
-  createOverlay(...values, true)
+  createOverlay(...values, true);
   const [data, criteria] = values;
   bindControls(criteria);
 });
+
 
 
 /**
@@ -36,10 +40,8 @@ Promise.all([
  * @param  {Boolean} verbose=false A flag for console output
  */
 function createOverlay(data, criteria, verbose=false) {
-  var overlay = new google.maps.OverlayView();
-
   // Add the container when the overlay is added to the map.
-  overlay.onAdd = function() {
+   overlay.onAdd = function() {
     //var layer = d3.select(this.getPanes().overlayLayer).append("div")
     //    .attr("class", "hospitals");
     var layer = d3.select(this.getPanes().overlayMouseTarget)
@@ -121,6 +123,15 @@ function createOverlay(data, criteria, verbose=false) {
             .style("top", (d.y - padding) + "px");
       }
     };
+  };
+
+  overlay.onRemove = function(){
+    // var layer= d3.select(this.getPanes().overlayMouseTarget);
+    // layer.select("div").parentNode.removeChild(layer.select("div"))
+    // layer.select("div") = null;
+    this.div_.parentNode.removeChild(this.div_);
+    this.div_ = null;
+    console.log("removeMap");
   };
 
   // Bind our overlay to the map…
@@ -494,6 +505,7 @@ function bindControls(criteria) {
   d3.select("#loadingIndicator").remove();
   const controls = d3.select("#controls");
   createCategoryControls(controls, criteria);
+  createFilterControls(controls, criteria);
 }
 
 function createCategoryControls(target, criteria) {
@@ -512,7 +524,7 @@ function createCategoryControls(target, criteria) {
 
   categoryControls.append("label")
     .text(criterion => criterion.name)
-    .attr("class", "slider-heading");
+    .attr("class", "slider-label");
 
   categoryControls.append("input")
     .attr({
@@ -523,48 +535,52 @@ function createCategoryControls(target, criteria) {
     })
     .on("change", function (criterion, index) {
       // Note: this mutates the critera object
-      criterion["weight"] = this.value;
+      criterion["weight"] = Number(this.value);
+      // updateMapOverlay();
       updateSidebar({}, criteria);
 
       // TODO: Regenerate hospital colors
-    })
+    });
 }
 
-function bindControls(criteria) {
-  d3.select("#loadingIndicator").remove();
-  const controls = d3.select("#controls");
-  createCategoryControls(controls, criteria);
-}
-
-function createCategoryControls(target, criteria) {
+function createFilterControls(target, criteria) {
   target.append("h3")
-    .text('I care most about...')
+    .text('More specifically, I care about...')
     .attr("class", "control-header");
 
-  const categoryControls = target.append("div")
-    .attr("id", "categoryControls")
-    .selectAll(".categoryControl")
+  // Generate a control group for each category
+  const filterControlGroup = target.append("div")
+    .attr("id", "filterControls")
+    .selectAll(".filterControlGroup")
     .data(criteria)
     .enter()
     .append("div")
-    .attr("class", "categoryControl");
+    .attr("class", "filterControlGroup")
 
+  filterControlGroup.append("label")
+    .text(d => d.name)
+    .attr("class", "slider-label")
 
-  categoryControls.append("label")
-    .text(criterion => criterion.name)
-    .attr("class", "slider-heading");
+  // Generate metric-level controls
+  const filterControls = filterControlGroup.selectAll(".filterControl")
+    .data(d => d.components)
+    .enter()
+    .append("div")
+    .attr({class: "filterControl"});
 
-  categoryControls.append("input")
+  // Generate a toggle for each metric
+  filterControls.append("input")
     .attr({
-      type: "range",
-      value: criterion => criterion["weight"],
-      max: 1,
-      step: 0.05,
-    })
-    .on("change", function (criterion, index) {
-      // Note: this mutates the criteria object
-      criterion["weight"] = Number(this.value);
+      type: "checkbox",
+      value: d => !!d.weight,
+    }).on("change", function(criterion) {
+      const checked = d3.select(this).property("checked");
+      criterion["weight"] = checked ? 1.0 : 0.0;
       updateSidebar({}, criteria);
-      // TODO: Regenerate hospital colors and donut chart
-    })
+    });
+
+  // Generate a label for each filter toggle
+  filterControls.append("label")
+    .text(d => d.name)
+    .attr("class", "filter-label")
 }
