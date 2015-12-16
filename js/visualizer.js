@@ -1,10 +1,3 @@
-// Create the Google Map…
-var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 4,
-  center: new google.maps.LatLng(39.828215,-98.5817593),
-  mapTypeId: google.maps.MapTypeId.ROADMAP
-});
-
 var styles = [
   //This colors the land.
   { featureType: "landscape",
@@ -90,29 +83,19 @@ var styles = [
   }
 ];
 
-map.setOptions({styles: styles});
-google.maps.event.addDomListener(window, 'load', map);
-
-var overlay = new google.maps.OverlayView();
-
 const COLORS = d3.scale.linear()
   .domain([0, 1])
   .range(["black", "#cedb9c"]);
 
 const DONUT_COLORS = ["#779FA1", "#FF6542", "#564154"];
 
-
-// Get the hospital data and ratingCriteria in parallel, but wait until
-// both arrive before excecuting the callback.
-Promise.all([
-  new Promise((resolve, reject) => d3.json("hospitalData.json", resolve)),
-  new Promise((resolve, reject) => d3.json("ratingCriteria.json", resolve)),
-]).then(values => {
-  createOverlay(...values, true);
-  const [data, criteria] = values;
-  bindControls(criteria);
+var overlay, donutChart;
+var map = new google.maps.Map(d3.select("#map").node(), {
+  zoom: 4,
+  center: new google.maps.LatLng(39.828215,-98.5817593),
+  mapTypeId: google.maps.MapTypeId.ROADMAP
 });
-
+HospitalOverlay.prototype = new google.maps.OverlayView();
 
 
 /**
@@ -124,104 +107,133 @@ Promise.all([
  * @param  {Object} criteria       The criteria with which to evaluate the data
  * @param  {Boolean} verbose=false A flag for console output
  */
-function createOverlay(data, criteria, verbose=false) {
-  // Add the container when the overlay is added to the map.
-   overlay.onAdd = function() {
-    //var layer = d3.select(this.getPanes().overlayLayer).append("div")
-    //    .attr("class", "hospitals");
-    var layer = d3.select(this.getPanes().overlayMouseTarget)
-      .append("div")
-      .attr("class", "hospitals");
+function HospitalOverlay (map, data, criteria, verbose=false) {
+  this._div = null;
+  this.data = data;
+  this.criteria = criteria;
+  this.verbose = verbose;
 
-    // Draw each marker as a separate SVG element.
-    // We could use a single SVG, but what size would it have?
-    overlay.draw = function() {
-      var projection = this.getProjection(),
-          padding = 10;
-
-      var marker = layer.selectAll("svg")
-          .data(d3.entries(data))
-          .each(transform) // update existing markers
-        .enter().append("svg:svg")
-          .each(transform)
-          .attr("class", "marker");
-
-      // Add a circle.
-      marker.append("svg:circle")
-        .attr({
-          r: 6,
-          cx: padding,
-          cy: padding,
-          id: d => d.key,
-          fill: d => COLORS(evaluateDatum(d.value, criteria, verbose)),
-        })
-        .on("mouseenter", function (d) {
-          const circle = d3.select(this);
-
-          d3.select("#tooltip")
-            .style({display: "initial"})
-            .style({
-              left: circle[0][0].offsetParent.offsetLeft + 20 + "px",
-              top: circle[0][0].offsetParent.offsetTop + "px",
-            })
-            .text(d.value["Hospital"].toLowerCase());
-
-          // Increase circle radius
-          d3.select(this).attr("r", 8);
-        })
-        .on("mouseleave", function (d) {
-          // Make tooltip invisible
-          d3.select("#tooltip")
-            .style("display", "none");
-
-          // Restore circle radius
-          d3.select(this).attr("r", 6);
-        })
-        .on("click", function (d) {
-          updateSidebar(d.value, criteria);
-
-          // Deselect last selection
-          const lastSelection = d3.select(".selectedHospital");
-          if (!lastSelection.empty()) {
-            const normedValue = evaluateDatum(
-              lastSelection.datum().value,
-              criteria
-            );
-
-            lastSelection.classed("selectedHospital", false)
-              .attr("fill", COLORS(normedValue));
-          }
-
-          // Select this element
-          const currentSelection = d3.select(this);
-
-          currentSelection.classed("selectedHospital", true)
-            .attr("fill", "#FF6542");
-        });
-
-
-      function transform(d) {
-        d = new google.maps.LatLng(d.value["Lat"], d.value["Long"]);
-        d = projection.fromLatLngToDivPixel(d);
-        return d3.select(this)
-            .style("left", (d.x - padding) + "px")
-            .style("top", (d.y - padding) + "px");
-      }
-    };
-  };
-
-  overlay.onRemove = function(){
-    // var layer= d3.select(this.getPanes().overlayMouseTarget);
-    // layer.select("div").parentNode.removeChild(layer.select("div"))
-    // layer.select("div") = null;
-    this.div_.parentNode.removeChild(this.div_);
-    this.div_ = null;
-    console.log("removeMap");
-  };
-
-  // Bind our overlay to the map…
-  overlay.setMap(map);
+  // Setup map
+  this.map = map
+  this.map.setOptions({styles});
+  this.setMap(this.map);
 }
+
+HospitalOverlay.prototype.onAdd = function () {
+  this._div = d3.select(this.getPanes().overlayMouseTarget)
+    .append("div")
+    .attr("class", "hospitals");
+
+  this.layer = d3.select(this.getPanes().overlayMouseTarget)
+    .append("div")
+    .attr("class", "hospitals");
+}
+
+HospitalOverlay.prototype.draw = function () {
+  const padding = [10, 10];
+  const [padX, padY] = padding;
+  const self = this;
+
+  // TODO: Review transform here - does it need to be in twice?
+  const markers = this.layer.selectAll("svg")
+    .data(this.data, d => d["Hospital"])
+    .each(function(d) {
+      self.transform(this, d, padding);
+    })
+    .enter()
+    .append("svg:svg") // TODO: Does this need to be here?
+    .each(function(d) {
+      self.transform(this, d, padding);
+    })
+    .attr("class", "marker")
+
+    markers.append("svg:circle")
+    .attr({
+      class: "circle",
+      r: 6,
+      cx: padX,
+      cy: padY,
+      id: (d, i) => i,
+      fill: d => COLORS(evaluateDatum(d, this.criteria, this.verbose)),
+    }).on("mouseenter", function (d) {
+      // Increase circle radius
+      d3.select(this).attr("r", 8)
+
+      // And position and show the tooltip
+      self.transform("#tooltip", d, [-20, 10])
+      d3.select("#tooltip")
+        .style({display: "initial"})
+        .text(d["Hospital"].toLowerCase());
+    }).on("mouseleave", function (d) {
+      // Restore circle radius
+      d3.select(this).attr("r", 6);
+
+      // Make tooltip invisible
+      d3.select("#tooltip")
+        .style({display: "none"});
+    })
+    .on("click", function (d) {
+      // Update the donut chart, address and other data
+      updateSidebar(d, self.criteria);
+
+      // Deselect last selection by setting it back to its correct fill color
+      const lastSelection = d3.select(".selectedHospital");
+      if (!lastSelection.empty()) {
+        const normedValue = evaluateDatum(
+          lastSelection.datum(),
+          self.criteria
+        );
+
+        lastSelection.classed("selectedHospital", false)
+          .attr("fill", COLORS(normedValue));
+      }
+
+      // Select this element and fill it with the selection color
+      const currentSelection = d3.select(this);
+      currentSelection.classed("selectedHospital", true)
+        .attr("fill", "#FF6542");
+    });
+}
+
+HospitalOverlay.prototype.update = function(data=null, criteria=null) {
+  const self = this;
+  if (!_.isNull(data)) this.data = data;
+  if (!_.isNull(criteria)) this.criteria = criteria;
+
+  d3.selectAll(".marker").selectAll(".circle")
+    .attr("fill", d => COLORS(evaluateDatum(d, self.criteria)));
+}
+
+HospitalOverlay.prototype.onRemove = function() {
+  console.log("ste")
+  if (!_.isNull(this._div)) {
+    this._div.remove();
+    this._div = null;
+  }
+}
+
+HospitalOverlay.prototype.transform = function (target, datum, padding=[10, 10]) {
+  const { Lat, Long } = datum;
+  const latLong = new google.maps.LatLng(Lat, Long);
+  const {x, y} = this.getProjection().fromLatLngToDivPixel(latLong);
+
+  const [padX, padY] = padding;
+
+  d3.select(target)
+    .style("left", (x - padX) + "px")
+    .style("top", (y - padY) + "px");
+}
+
+// Get the hospital data and ratingCriteria in parallel, but wait until
+// both arrive before excecuting the callback.
+Promise.all([
+  new Promise((resolve, reject) => d3.json("hospitalData.json", resolve)),
+  new Promise((resolve, reject) => d3.json("ratingCriteria.json", resolve)),
+]).then(values => {
+  const [data, criteria] = values;
+  overlay = new HospitalOverlay(map, ...values);
+  bindControls(criteria);
+});
 
 /**
  * A function to evaluate a datum to a 0-1 normalized score based on the
@@ -325,26 +337,26 @@ function accessValue(datum, keys, verbose=false) {
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
-function updateSidebar(datum={}, criteria=[]) {
+function updateSidebar(datum=null, criteria=null) {
   const sidebar = d3.select('#detailSidebar');
   const isShowing = sidebar.classed('show');
-  const haveData = !(_.isEmpty(datum));
+  const haveData = !(_.isNull(datum));
 
   //Update either the radius or the angle
   if (isShowing) {
-    updateDonutChart('#hospitalDonut', datum, criteria)
+    donutChart.update(datum, criteria)
   //This is the case where we have clicked on a hospital
   } else if (!isShowing && haveData) {
     sidebar.classed('show', true);
-    addDonutChart('#hospitalDonut', datum, criteria);
+    donutChart = new DonutChart('#hospitalDonut', datum, criteria);
   }
 
   //If we clicked on a hospital, update the data
   if (haveData){
-    d3.select('#hospitalNameField')
-    .text(datum['Hospital'].toLowerCase());
+    const { Address, Hospital } = datum;
 
-    const { Address } = datum;
+    d3.select('#hospitalNameField')
+    .text(Hospital.toLowerCase());
 
     d3.select('#addressField')
       .text(Address['StreetAddress'].toLowerCase());
@@ -360,295 +372,198 @@ function updateSidebar(datum={}, criteria=[]) {
   }
 }
 
-function addDonutChart(target, datum, criteria=[]) {
+var DonutChart = function(target, datum, criteria) {
+  this.margin = {
+    top: 20,
+    bottom: 20,
+    left: 20,
+    right: 20,
+  };
 
-  // TODO: Add a margin around the chart. Right now, a small width may cause
-  // the text on the bottom to be cut-off
-  const svg = d3.select(target);
-  //Remove everything before drawing it again.
-  svg.selectAll("*").remove();
+  this.svg = d3.select(target)
+    .attr({transform: `translate( ${this.margin.left}, ${this.margin.right})`});
 
-  const width = svg[0][0].clientWidth;
-  const height = svg[0][0].clientHeight;
+  this.resizeChart();
 
-  // Center donut viz in square SVG
-  const viz = svg.append("g")
-    .attr("transform", `translate( ${width/2}, ${height - width/2})`);
+  // Generate dimensional properties
+  this.draw(datum, criteria);
+}
 
-  const maxRadius = 0.4 * width;
-  const minRadius = 0.2 * width;
+DonutChart.prototype.calculateArcRadius = function (datum, criteria) {
+  const normedValue = evaluateDatum(datum, criteria);
+  const maxArea = Math.pow(this.maxRadius, 2) - Math.pow(this.minRadius, 2);
+  const desiredArea =  maxArea * normedValue;
+  return  Math.sqrt( desiredArea + Math.pow(this.minRadius, 2));
+}
 
-  const textRadius = maxRadius *1.15;
-  const radiusScale = d3.scale.linear()
+DonutChart.prototype.resizeChart = function () {
+  // Regenerate dimensions
+  const { left, right, bottom, top } = this.margin;
+  this.width = parseInt(this.svg.style("width")) - left - right;
+  this.height = parseInt(this.svg.style("height")) - top - bottom;
+
+
+  // Create dimension dependent variables
+  this.minRadius = 0.2 * this.width;
+  this.maxRadius = 0.4 * this.width;
+  this.textRadius = this.maxRadius * 1.15;
+
+  // Create and center donut
+  this.donut = this.svg.append("g")
+    .append("g")
+    .attr({
+      id: "donutChart",
+      transform: `translate( ${this.width/2}, ${this.height - this.width/2})`
+    })
+
+  // Create Arc Generators
+  this.radiusScale = d3.scale.linear()
     .domain([0, 1])
-    .range([minRadius, maxRadius]);
+    .range([this.minRadius, this.maxRadius]);
 
-  const bkgArc = d3.svg.arc()
-    .outerRadius(maxRadius)
-    .innerRadius(minRadius);
+  this.backgroundArc = d3.svg.arc()
+    .outerRadius(this.maxRadius)
+    .innerRadius(this.minRadius);
 
-  const natAvgArc = d3.svg.arc()
-    .outerRadius(radiusScale(0.5) + 1)
-    .innerRadius(radiusScale(0.5));
+  this.nationalAvgArc = d3.svg.arc()
+    .outerRadius(this.radiusScale(0.5) + 1)
+    .innerRadius(this.radiusScale(0.5));
 
+  this.labelArc = d3.svg.arc()
+    .innerRadius(this.textRadius)
+    .outerRadius(this.textRadius);
 
-  const arc = d3.svg.arc()
-    .innerRadius(minRadius);
-
-  const labelArc = d3.svg.arc()
-    .innerRadius(textRadius)
-    .outerRadius(textRadius);
-
-  const pie = d3.layout.pie()
+  this.pie = d3.layout.pie()
     .sort(null)
     .padAngle(.04)
-    .value(d => d.weight);
+    .value(criterion => criterion.weight);
+}
 
-  const g = viz.selectAll(".metricGroup")
-    .data(pie(criteria))
+DonutChart.prototype.draw = function (datum=null, criteria=null) {
+  if (!_.isNull(this.datum = datum));
+  if (!_.isNull(this.criteria = criteria));
+
+  // Issue warnings to forstall errors in initial draw calls
+  if(_.isNull(this.datum))
+    console.warn("Donut chart drawn with empty datum field");
+  if(_.isNull(this.criteria))
+    console.warn("Donut chart drawn with empty criteria field");
+
+  this.donut.selectAll("*").remove();
+  const self = this;
+
+  // Data arc definition (which relies on datum and criteria)
+  const dataArc = d3.svg.arc()
+    .innerRadius(this.minRadius)
+    .outerRadius(pieDatum => this.calculateArcRadius(this.datum, [pieDatum.data]));
+
+  // Attach groups for each metric to the donut
+  const metricGroups = this.donut.selectAll(".metricGroup")
+    .data(this.pie(this.criteria))
     .enter()
     .append("g")
-    .attr("class", "metricGroup")
-    .attr("id", d => d.data.name + "Group");
-
-  g.each(function(d){
-     // d.data is actually a criterion
-      d.normedValue = evaluateDatum(datum, [d.data]);
-
-      // Convert the normedValue to an area and calculate the corresponding
-      // outer radius
-      const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
-      const desiredArea =  maxArea * d.normedValue;
-      d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
-
-      /*I'm open to other suggestions for how to do this, but we can't do the mouseover
-      event without somehow appending the datum to the data or using global variables.
-      This is unfrotunatle because it appends the datum three times, but I wasn't sure
-      if stuff would break if I broke the datum down into more pieces.
-
-      If we don't do this, the mouseover/drilldown just always uses the first datum.*/
-      d.datum = datum;
-    })
-    .append("path")
-    .attr("d", arc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .attr("id", d => d.data.name + "rating")
-    .attr("class", "rating");
-
-  g.append("path")
-    .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .style('opacity', 0.2)
-    .attr("id", d => d.data.name + "bkg")
-    .attr("class", "bkgArc staticRad")
-    .on("mouseover", function(d,i){
-      donutDrilldown(d.datum, d, radiusScale, arc, DONUT_COLORS[i], maxRadius);
-    })
-    .on("mouseout", function(d){
-      exitDonutDrilldown(d);
+    .attr({
+      id: d => d.data.name + "Group",
+      class: "metricGroup",
     });
 
-  g.append("text")
-    .attr("dy", ".35em")
-    .attr("x", function (d) {
-      const textAngle = (d.endAngle + d.startAngle)/2;
-      return textRadius * Math.sin(textAngle);
-    })
-    .attr("y", function(d){
-      const textAngle = (d.endAngle + d.startAngle)/2;
-      return -textRadius * Math.cos(textAngle);
-    })
-    .attr("text-anchor", "middle")
-    .text(d => d.data.name)
-    .attr("class", "metricLabel");
+  // Attach the primary data arc to each wedge
+  const dataArcs = metricGroups.append("path")
+    .style({fill: (d, i) =>  DONUT_COLORS[i]})
+    .attr({
+      d: dataArc,
+      id: d => d.data.name + 'Rating',
+      class: 'rating',
+    });
 
-  viz.append("text")
-    .attr("class", "stars")
-    .attr("x", 0) //centered w/ transform
-    .attr("y", 0) //center w/ transform
-    .attr("font-size", "30px")
-    .attr("text-anchor", "middle")
-    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
+  // Attach the background arc to each wedge
+  const backgroundArcs = metricGroups.append("path")
+    .style({
+      fill: (d, i) =>  DONUT_COLORS[i],
+      opacity: 0.2,
+    }).attr({
+      d: this.backgroundArc,
+      id: d => d.data.name + "Background",
+      class: "backgroundArc staticRad",
+    }).on("mouseover", function(d, i) {
+      self.drilldown(
+        d,
+        dataArc,
+        DONUT_COLORS[i]
+      );
+    })
+    .on("mouseout", self.exitDrilldown);
+
+  // Create labels for each metricGroup
+  const labels = metricGroups.append("text")
+    .attr({
+      dy: ".35em",
+      x: d => self.textRadius * Math.sin((d.endAngle + d.startAngle) / 2),
+      y: d => self.textRadius * Math.cos((d.endAngle + d.startAngle) / 2),
+      "text-anchor": "middle",
+    })
+    .text(d => d.data.name);
+
+  // Create a star count in the middle of the donut
+  this.donut.append("text")
+    .attr({
+      class: "stars",
+      x: 0, // centered with the transform
+      y: 0, // centered with the transform
+      "text-anchor": "middle",
+      "font-size": "30px",
+    })
+    .text((evaluateDatum(this.datum, this.criteria) * 5).toFixed(2) + " / 5")
     .append("tspan")
-    .attr("dy", "1.2em")
-    .attr("x", 0)
-    .attr("font-size", "16px")
+    .attr({
+      dy: "1.2em",
+      x: 0,
+      "font-size": "16px"
+    })
     .text("stars");
 
-  //the national average line. Not creating an arc variable
-  //for this because we don't know any of the parameters
-  //ahead of time.
-  //Also, it seems like these are all 0.5, even though the
-  //mean is not necessarily 50th percentile
-  g.append("path")
-    .each(function(d){
-      //This is gross and I don't like setting the outer and inner radii here, but it makes updating much
-    })
-    .attr("d", natAvgArc)
-    .attr("class", "natAvgLine staticRad");
-
-  viz.append("line")
-    .style("stroke", "black")
-    .attr("x1", -100)
-    .attr("y1", -(maxRadius + 15))
-    .attr("x2", -80)
-    .attr("y2",  -(maxRadius + 15))
-    .attr("class", "natAvgLegend");
-
-  viz.append("text")
-    .attr("x", -75)
-    .attr("y", -(maxRadius + 15))
-    .attr("dy", "0.35em")
-    .attr("font-size", "14px")
-    .text("National Average");
-}
-
-function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
-
-  console.log("datum", datum);
-  console.log("HI");
-  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
-
-  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
-
-  metricRatingArc.style("visibility", "hidden");
-
-  const drilldownColor = d3.scale.linear()
-    .domain([0, 1])
-    .range(["#FFFFFF", color]);
-
-  const drilldownPie = d3.layout.pie()
-    .sort(null)
-    .padAngle(.04)
-    .value(d => d.weight)
-    .startAngle(criteria.startAngle)
-    .endAngle(criteria.endAngle);
-
-  const drilldown = metricRatingGroup.selectAll(".drilldownData")
-    .data(drilldownPie(criteria.data.components))
-    .enter()
-    .append("g")
-    .attr("class", "drilldownData");
-
-  //For some reason I can't get the arcs to animate, so, they don't animate here.
-  drilldown.each(function (d) {
-      d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
-    })
-    .append("path")
-    .attr("d", arc)
-    .style("fill", function(d,i){
-      const percentThrough = i/(criteria.data.components.length);
-      //offset the percent though so we don't get a white square
-      return drilldownColor(0.75*percentThrough + 0.25);
-    })
-    .style("stroke-width", 2)
-    .style("stroke", "white");
-
-  //Add the legend
-  drilldown.append("rect")
-    .attr("x", -100)
-    .attr("y", function(d,i){
-      return -(maxRadius +50 + (i) *25);
-    })
-    .attr("width", 20)
-    .attr("height", 20)
-    .attr("fill", function(d,i){
-      const percentThrough = i/(criteria.data.components.length);
-      //offset the percent though so we don't get a white square
-      return drilldownColor(0.75*percentThrough + 0.25);
+  // Create the national average line
+metricGroups.append("path")
+    .attr({
+      d: this.nationalAvgLine,
+      class: "nationalAvgArc staticRad"
     });
 
-  drilldown.append("text")
-    .attr("x", -75)
-    .attr("y", function(d,i){
-      return -(maxRadius +50 + (i) *25);
-    })
-    .attr("dy", "1em")
-    .attr("font-size", "14px")
-    .text(d => d.data.name);
+  // TODO: Bring back national average key gracefully
 }
 
+DonutChart.prototype.update = function (datum=null, criteria=null) {
+  // TODO: Handle resizing of the window.
+  if (!_.isNull(datum)) this.datum = datum;
+  if (!_.isNull(criteria)) this.criteria = criteria;
 
-function exitDonutDrilldown(criteria){
-  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
-
-  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
-
-  metricRatingArc.style("visibility", "visible");
-
-  metricRatingGroup.selectAll(".drilldownData").remove();
-}
-
-function updateDonutChart(target, datum={}, criteria=[]) {
-  // TODO: Add a margin around the chart. Right now, a small width may cause
-  // the text on the bottom to be cut-off
-
-  //TODO: Handle resizing of the window.
-
-  const svg = d3.select(target);
-
-  const viz = svg.select("g");
-
-  const width = svg[0][0].clientWidth;
-
-  const maxRadius = 0.4 * width;
-  const minRadius = 0.2 * width;
-
-  const textRadius = maxRadius * 1.15;
+  const self = this;
 
   var score = 0;
   var sumOfWeights = 0;
 
-  const isUpdatingRadius = !(_.isEmpty(datum));
+  const dataArc = d3.svg.arc()
+    .innerRadius(this.minRadius)
+    .outerRadius(pieDatum => this.calculateArcRadius(this.datum, [pieDatum.data]));
 
-  const radiusScale = d3.scale.linear()
-    .domain([0, 1])
-    .range([minRadius, maxRadius]);
-
-  const bkgArc = d3.svg.arc()
-    .outerRadius(maxRadius)
-    .innerRadius(minRadius);
-
-  const natAvgArc = d3.svg.arc()
-    .outerRadius(radiusScale(0.5) + 1)
-    .innerRadius(radiusScale(0.5));
-
-  const arc = d3.svg.arc()
-    .innerRadius(minRadius);
-
-  const labelArc = d3.svg.arc()
-    .innerRadius(textRadius)
-    .outerRadius(textRadius);
-
-  const updatePie = d3.layout.pie()
-    .sort(null)
-    .value(d => d.weight);
-
-  const newPieData = updatePie(criteria);
-
-  //Animate the new radius.
-  const criteriaGroups = viz.selectAll(".metricGroup");
+  const newPieData = this.pie(this.criteria);
+  const metricGroups = this.donut.selectAll(".metricGroup")
+  const dataArcs = metricGroups.selectAll(".rating");
 
   //Add new radius and angle information here.
-  criteriaGroups.each(function(d,i){
-    d.datum = datum;
-    if (isUpdatingRadius) {
-      d.normedValue = evaluateDatum(datum, [d.data]);
-      d.newOuter = radiusScale(d.normedValue);
-    } else d.newOuter = d.outerRadius;
+  metricGroups.each(function(d, i){
+    if (!_.isNull(datum)) d.newOuter = self.calculateArcRadius(self.datum, [d.data]);
+    else d.newOuter = d.outerRadius;
 
-    score += d.data.weight * d.normedValue;
-    sumOfWeights += +d.data.weight;
-    //reset everything but the start and end angles
+    // Reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
     d.value = newPieData[i].value;
     d.data = newPieData[i].data;
   });
 
-  const criteriaArcs = criteriaGroups.selectAll(".rating");
-
-  criteriaArcs.transition()
+  // Transition the actual arcs showing the data
+  dataArcs.transition()
     .duration(1000)
     .attrTween("d", function(d,i) {
       var interpolateRad = d3.interpolate(d.outerRadius, d.newOuter);
@@ -658,64 +573,106 @@ function updateDonutChart(target, datum={}, criteria=[]) {
           d.endAngle = interpolateEnd(t);
           d.startAngle = interpolateStart(t);
           d.outerRadius = interpolateRad(t);
-          return arc(d);
+          return dataArc(d);
       };
     });
 
-  //These are arcs where we don't need to update the radius, just the start and end angle
-  const staticRadArcs = criteriaGroups.selectAll(".staticRad");
-
-  staticRadArcs.transition()
+  // These are arcs where we don't need to update the radius,
+  // just the start and end angle
+  metricGroups.selectAll(".staticRad").transition()
     .duration(1000)
     .attrTween("d", function(d,i) {
-      const isBkgArc = this.classList.contains("bkgArc");
+      const isBkgArc = this.classList.contains("backgroundArc");
       var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
       var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
       return function(t) {
           d.endAngle = interpolateEnd(t);
           d.startAngle = interpolateStart(t);
-          return isBkgArc ? bkgArc(d) : natAvgArc(d);
+          return isBkgArc ? self.backgroundArc(d) : self.nationalAvgArc(d);
       };
     });
 
-  criteriaGroups.selectAll(".metricLabel")
+  // Transisiton the labels for each metric
+  metricGroups.selectAll(".metricLabel")
     .transition()
     .duration(1000)
-    .attr("x", function (d) {
-      const textAngle = (d.newEnd + d.newStart)/2;
-      return textRadius * Math.sin(textAngle);
-    })
-    .attr("y", function(d){
-      const textAngle = (d.newEnd + d.newStart)/2;
-      return -textRadius * Math.cos(textAngle);
+    .attr({
+      x: d => self.textRadius * Math.sin((d.newEnd + d.newStart) / 2),
+      y: d => self.textRadius * Math.cos((d.newEnd + d.newStart) / 2),
+      "text-anchor": "middle",
     });
 
-  const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
-  viz.selectAll(".stars")
-    .text(starRating + " / 5")
-    .append("tspan")
-    .attr("dy", "1.2em")
-    .attr("x", 0)
-    .attr("font-size", "16px")
-    .text("stars")
-    .style("text-transform", "none");
-
+  // Recalculate star rating
+  const starRating = (evaluateDatum(this.datum, this.criteria) * 5 ).toFixed(2);
+  this.donut.selectAll(".stars")
+    .text(starRating + " / 5");
 }
 
-function updateMapOverlay(){
-  overlay.setMap(null);
-  overlay.setMap(map);
+DonutChart.prototype.drilldown = function (pieDatum, dataArcGenerator, color) {
+  const criterion = pieDatum.data;
+
+  // Select data arc and its group, then hide the data arc
+  const dataArc = d3.select("#" + criterion.name + "Rating");
+  const metricRatingGroup = d3.select(dataArc.node().parentNode);
+  dataArc.style("visibility", "hidden");
+
+  // Create a color scale such that white will never be returned
+  const drilldownColor = d3.scale.linear()
+    .domain([-criterion.components.length / 3, criterion.components.length])
+    .range(["#FFFFFF", color]);
+
+  const drilldownPie = d3.layout.pie()
+    .sort(null)
+    .padAngle(.04)
+    .value(criterion => criterion.weight)
+    .startAngle(pieDatum.startAngle)
+    .endAngle(pieDatum.endAngle);
+
+  // Create a drilldown group, almost identical to a metricGroup
+  const drilldownGroup = metricRatingGroup.selectAll(".drilldownData")
+    .data(drilldownPie(criterion.components))
+    .enter()
+    .append("g")
+    .attr("class", "drilldownData");
+
+  // Generate drilldown arcs
+  const drilldownDataArcs = drilldownGroup.append("path")
+    .attr({d: dataArcGenerator})
+    .style({
+      fill: (d, i) => drilldownColor(i),
+      stroke: "white",
+      "stroke-width": 2,
+    });
+
+
+  // Add the legend color blocks
+  const drilldownLegendColors = drilldownGroup.append("rect")
+    .attr({
+      x: -100,
+      y: (d, i) => -(this.maxRadius + 50 + i * 25),
+      width: 20,
+      height: 20,
+      fill: (d, i) => drilldownColor(i),
+    });
+
+  // Add the drilldown legend
+  drilldownGroup.append("text")
+    .attr({
+      x: -75,
+      y: (d, i) => -(this.maxRadius + 50 + i * 25),
+      dy: "1em",
+      "font-size": "14px"
+    })
+    .text(d => d.data.name);
 }
 
-function exitDonutDrilldown(criteria){
-  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
-
+DonutChart.prototype.exitDrilldown = function (pieDatum) {
+  const metricRatingArc = d3.select("#" + pieDatum.data.name + "Rating");
   const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
-
   metricRatingArc.style("visibility", "visible");
-
   metricRatingGroup.selectAll(".drilldownData").remove();
 }
+
 /**
 node-ztable
 -----------
@@ -790,10 +747,9 @@ function createCategoryControls(target, criteria) {
     })
     .on("change", function (criterion, index) {
       // Note: this mutates the critera object
-      criterion["weight"] = this.value;
-      updateSidebar({}, criteria);
-      updateMapOverlay();
-      // TODO: Regenerate hospital colors
+      criterion["weight"] = Number(this.value);
+      updateSidebar(null, criteria);
+      overlay.update();
     })
 }
 
