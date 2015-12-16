@@ -437,16 +437,13 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
   //For some reason I can't get the arcs to animate, so, they don't animate here. 
   drilldown.each(function (d) {
       d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
-
-      console.log(d.outerRadius);
-      console.log(d.newOuter);
     })
     .append("path")
     .attr("d", arc)
-    .style("fill", color)
-    .style("opacity", function(d,i) {
-      const percentThroughCriteria = i/(criteria.data.components.length -1);
-      return opacityScale(percentThroughCriteria);
+    .style("fill", function(d,i){
+      const percentThrough = i/(criteria.data.components.length);
+      //offset the percent though so we don't get a white square
+      return drilldownColor(0.75*percentThrough + 0.25);
     })
     .style("stroke-width", 2)
     .style("stroke", "white");
