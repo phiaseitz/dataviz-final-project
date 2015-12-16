@@ -540,7 +540,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   //Animate the new radius.
   const criteriaGroups = viz.selectAll(".metricGroup");
 
-  //Add new radius and angle information here. 
+  //Add new radius and angle information here.
   criteriaGroups.each(function(d,i){
     if (isUpdatingRadius) {
       d.datum = datum;
@@ -622,55 +622,14 @@ function updateMapOverlay(criteria){
     d3.select(this)
       .attr('fill', d => COLORS(evaluateDatum(d.value,criteria)));
   });
-   
-}
 
-/**
-node-ztable
------------
-
-This code, originally packaged for node, is taken from
-https://github.com/arjanfrans/node-ztable and is used to move from a statistical
-z-score to a percentile.
-
-Fun-Fact: The code was originally bugged. But thanks to the miracle of
-open-source, it has been fixed here and a PR has been submitted to the repo
-from whence it came.
-
-*/
-
-/**
- * A helper function that, given a z-score (std deviations from the mean)
- * returns the percentile to which that z-score maps.
- *
- * @param  {Number} zscore A z-score, the number of std. deviations from a mean
- * @return {Number}        A percentile, as a 0-1 value
- */
-function ztable(zscore) {
-  // Clean arguments
-  if (isNaN(zscore)) {
-    console.warn("ERROR: zscore", zscore, "is not a number!" )
-    return undefined
-  }
-
-  // Handle edge cases
-  if (zscore === 0) return 0.5000;
-  else if (zscore > 3.49) return 1;
-  else if (zscore < -3.49) return 0;
-
-  let percentile;
-
-  if (zscore > 0) percentile = 1-ZTABLE[(-zscore).toFixed(2)];
-  else percentile = ZTABLE[zscore.toFixed(2)];
-
-  return percentile;
 }
 
 function bindControls(criteria) {
   d3.select("#loadingIndicator").remove();
   const controls = d3.select("#controls");
   createCategoryControls(controls, criteria);
-
+  createFilterControls(controls, criteria);
 }
 
 function createCategoryControls(target, criteria) {
@@ -698,4 +657,47 @@ function createCategoryControls(target, criteria) {
       updateMapOverlay(criteria);
       updateSidebar({}, criteria);
     })
+}
+
+function createFilterControls(target, criteria) {
+  target.append("h3")
+    .text('More specifically, I care about...')
+    .attr("class", "control-header");
+
+  // Generate a control group for each category
+  const filterControlGroup = target.append("div")
+    .attr("id", "filterControls")
+    .selectAll(".filterControlGroup")
+    .data(criteria)
+    .enter()
+    .append("div")
+    .attr("class", "filterControlGroup")
+
+  filterControlGroup.append("label")
+    .text(d => d.name)
+    .attr("class", "slider-label")
+
+  // Generate metric-level controls
+  const filterControls = filterControlGroup.selectAll(".filterControl")
+    .data(d => d.components)
+    .enter()
+    .append("div")
+    .attr({class: "filterControl"});
+
+  // Generate a toggle for each metric
+  filterControls.append("input")
+    .property("checked", d => !!d.weight)
+    .attr({
+      type: "checkbox",
+    }).on("change", function(criterion) {
+      const checked = d3.select(this).property("checked");
+      criterion["weight"] = checked ? 1.0 : 0.0;
+      updateMapOverlay(criteria);
+      updateSidebar({}, criteria);
+    });
+
+  // Generate a label for each filter toggle
+  filterControls.append("label")
+    .text(d => d.name)
+    .attr("class", "filter-label")
 }
