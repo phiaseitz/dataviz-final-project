@@ -9,6 +9,7 @@ map.setOptions({styles: styles});
 google.maps.event.addDomListener(window, 'load', map);
 
 var overlay = new google.maps.OverlayView();
+var donutChart;
 
 const COLORS = d3.scale.linear()
   .domain([0, 1])
@@ -238,11 +239,11 @@ function updateSidebar(datum={}, criteria=[]) {
 
   //Update either the radius or the angle
   if (isShowing) {
-    updateDonutChart('#hospitalDonut', datum, criteria)
+    donutChart.update('#hospitalDonut', datum, criteria)
   //This is the case where we have clicked on a hospital
   } else if (!isShowing && haveData) {
     sidebar.classed('show', true);
-    addDonutChart('#hospitalDonut', datum, criteria);
+    donutChart = new DonutChart('#hospitalDonut', datum, criteria);
   }
 
   //If we clicked on a hospital, update the data
@@ -266,7 +267,9 @@ function updateSidebar(datum={}, criteria=[]) {
   }
 }
 
-function addDonutChart(target, datum, criteria=[]) {
+var DonutChart = function (target, datum, criteria) {
+  this.datum = datum;
+  this.criteria = criteria;
 
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
@@ -490,7 +493,10 @@ function exitDonutDrilldown(criteria){
   metricRatingGroup.selectAll(".drilldownData").remove();
 }
 
-function updateDonutChart(target, datum={}, criteria=[]) {
+DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
+  if(!_.isEmpty(datum)) this.datum = datum;
+  if(!_.isEmpty(criteria)) this.criteria = criteria;
+
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
 
@@ -535,21 +541,20 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     .sort(null)
     .value(d => d.weight);
 
-  const newPieData = updatePie(criteria);
+  const newPieData = updatePie(this.criteria);
 
   //Animate the new radius.
   const criteriaGroups = viz.selectAll(".metricGroup");
 
   //Add new radius and angle information here.
-  criteriaGroups.each(function(d,i){
-    if (isUpdatingRadius) {
-      d.datum = datum;
-      d.normedValue = evaluateDatum(datum, [d.data]);
-      d.newOuter = radiusScale(d.normedValue);
-    } else d.newOuter = d.outerRadius;
+  criteriaGroups.each((d, i) => {
+    d.datum = this.datum;
+    d.normedValue = evaluateDatum(this.datum, [d.data]);
+    d.newOuter = radiusScale(d.normedValue);
 
     score += d.data.weight * d.normedValue;
     sumOfWeights += +d.data.weight;
+
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
@@ -633,6 +638,10 @@ function bindControls(criteria) {
 }
 
 function createCategoryControls(target, criteria) {
+  target.append("h3")
+    .text('I care most about...')
+    .attr("class", "control-header");
+
   const categoryControls = target.append("div")
     .attr("id", "categoryControls")
     .selectAll(".categoryControl")

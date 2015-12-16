@@ -29,7 +29,6 @@ html, body, #map {
   width: 30vw;
   background-color: rgba(255, 255, 255, 0.95);
   transition: transform 0.3s ease-in-out;
-  padding: 20px;
   box-sizing: border-box;
   text-transform: capitalize;
 }
@@ -50,13 +49,21 @@ html, body, #map {
   transform: translateX(-30vw);
 }
 
+#hospitalDonut {
+  width: 100%;
+  height: 75%;
+}
+
 .sidebarContent {
   display: flex;
-  justify-content: center;
   flex-direction: column;
+
   width: 100%;
   height: 100%;
   font-family: 'Source Sans Pro', sans-serif;
+  padding: 60px 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 button {
@@ -124,43 +131,44 @@ button {
 }
 
 #controls {
-<<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
-  margin: 0 auto;
   display: flex;
   justify-content: center;
   flex-direction: column;
-  width: 90%;
-=======
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  width: 100%;
->>>>>>> Category controls generated and effective, but need to force refresh
-  height: 100%;
   font-family: 'Source Sans Pro', sans-serif;
 }
 
 #loadingIndicator {
   align-self: center;
 }
-<<<<<<< 59eae88275fddbdf43d8ea37ae364f872d343184
-<<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
 
-<<<<<<< 5ad2c385fde92a8aea1fb78ec8606659ede36d5d
 .categoryControl {
   display: flex;
   flex-direction: column;
   margin-bottom: 30px;
 }
 
-.slider-heading {
+.slider-label {
   margin-bottom: 8px;
   align-self: flex-end;
   font-size: 1.1em;
 }
 
+.filter-label {
+  font-size: .8em;
+}
+
 .control-header {
   text-transform: none;
+}
+
+.filterControlGroup {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.filterControl {
+  margin-bottom: 5px;
 }
 
 /* -- Slider Styling -- */
@@ -227,11 +235,6 @@ input[type=range]:focus::-moz-range-track {
 .drilldownData{
   pointer-events: none;
 }
-<<<<<<< HEAD
-<<<<<<< 1324b833b8ce3e17eedd74ee5380f1548b39e799
-=======
->>>>>>> Category controls generated and effective, but need to force refresh
-=======
 
 .rating {
   pointer-events: none;
@@ -240,19 +243,9 @@ input[type=range]:focus::-moz-range-track {
 .drilldownData{
   pointer-events: none;
 }
->>>>>>> Split arcs on mouseover
-=======
-=======
-
->>>>>>> cbc04c24a8c1cb4f0dc43c1428786f84accbb650
 
 .natAvgLine {
   pointer-events: none;
-  z-index: -1; 
+  z-index: -1;
   position:relative;
 }
-<<<<<<< HEAD
->>>>>>> update function now works with angle padding also resolved a bunch of merge conflicts
-=======
-
->>>>>>> cbc04c24a8c1cb4f0dc43c1428786f84accbb650
