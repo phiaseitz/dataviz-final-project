@@ -584,7 +584,7 @@ function updateMapOverlay(criteria){
 
   markers.each(function(d,i){
     d3.select(this)
-      .attr('fill', function(d,i){return COLORS(evaluateDatum(d.value,criteria));});
+      .attr('fill', d => COLORS(evaluateDatum(d.value,criteria)));
   });
    
 }
