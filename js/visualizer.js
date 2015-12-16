@@ -133,7 +133,6 @@ function createOverlay(data, criteria, verbose=false) {
     this.div_ = null;
     console.log("removeMap");
   };
-  
   // Bind our overlay to the map…
   overlay.setMap(map);
 }
@@ -279,7 +278,6 @@ function addDonutChart(target, datum, criteria=[]) {
 
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
-
   const svg = d3.select(target);
   //Remove everything before drawing it again.
   svg.selectAll("*").remove();
@@ -328,13 +326,21 @@ function addDonutChart(target, datum, criteria=[]) {
 
   g.each(function(d){
      // d.data is actually a criterion
-    d.normedValue = evaluateDatum(datum, [d.data]);
+      d.normedValue = evaluateDatum(datum, [d.data]);
 
-    // Convert the normedValue to an area and calculate the corresponding
-    // outer radius
-    const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
-    const desiredArea =  maxArea * d.normedValue;
-    d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
+      // Convert the normedValue to an area and calculate the corresponding
+      // outer radius
+      const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
+      const desiredArea =  maxArea * d.normedValue;
+      d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
+
+      /*I'm open to other suggestions for how to do this, but we can't do the mouseover
+      event without somehow appending the datum to the data or using global variables.
+      This is unfrotunatle because it appends the datum three times, but I wasn't sure
+      if stuff would break if I broke the datum down into more pieces.
+
+      If we don't do this, the mouseover/drilldown just always uses the first datum.*/
+      d.datum = datum;
     })
     .append("path")
     .attr("d", arc)
@@ -349,7 +355,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("id", d => d.data.name + "bkg")
     .attr("class", "bkgArc staticRad")
     .on("mouseover", function(d,i){
-      donutDrilldown(datum, d, radiusScale, arc, DONUT_COLORS[i], maxRadius);
+      donutDrilldown(d.datum, d, radiusScale, arc, DONUT_COLORS[i], maxRadius);
     })
     .on("mouseout", function(d){
       exitDonutDrilldown(d);
@@ -434,7 +440,6 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     .append("g")
     .attr("class", "drilldownData");
 
-  //For some reason I can't get the arcs to animate, so, they don't animate here. 
   drilldown.each(function (d) {
       d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
     })
@@ -497,7 +502,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
 
-  const textRadius = maxRadius + 20; // padding = 20
+  const textRadius = maxRadius * 1.15;
 
   var score = 0;
   var sumOfWeights = 0;
