@@ -305,7 +305,7 @@ function accessValue(datum, keys, verbose=false) {
  *
  * @param  {Object} datum The datum describing a hospital
  * @param  {Object} criteria The criteria by which to evaluate the datum
- * Check if the sidebar is already open. 
+ * Check if the sidebar is already open.
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
@@ -350,7 +350,7 @@ function addDonutChart(target, datum, criteria=[]) {
   // the text on the bottom to be cut-off
 
   const svg = d3.select(target);
-  //Remove everything before drawing it again. 
+  //Remove everything before drawing it again.
   svg.selectAll("*").remove();
 
   const width = svg[0][0].clientWidth;
@@ -392,29 +392,28 @@ function addDonutChart(target, datum, criteria=[]) {
     .sort(null)
     .value(d => d.weight);
 
-  const g = viz.selectAll(".arc")
+  const arcs = viz.selectAll(".arc")
     .data(pie(criteria))
     .enter()
     .append("g")
     .attr("class", "arc");
 
-  g.each(function(d){
-     // d.data is actually a criterion
-    d.normedValue = evaluateDatum(datum, [d.data]);
+  arcs.each(function(d){
+      // d.data is actually a criterion
+      d.normedValue = evaluateDatum(datum, [d.data]);
 
-    // Convert the normedValue to an area and calculate the corresponding
-    // outer radius
-    const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
-    const desiredArea =  maxArea * d.normedValue;
-    d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
-    console.log(d);
+      // Convert the normedValue to an area and calculate the corresponding
+      // outer radius
+      const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
+      const desiredArea =  maxArea * d.normedValue;
+      d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
     })
     .append("path")
     .attr("d", arc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
     .attr("class", "criteriaSlice");
 
-  g.append("text")
+  arcs.append("text")
     .attr("dy", ".35em")
     .attr("x", function (d) {
       const textAngle = (d.endAngle + d.startAngle)/2;
@@ -441,23 +440,20 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("font-size", "16px")
     .text("stars");
 
-  //the national average line. Not creating an arc variable
-  //for this because we don't know any of the parameters 
-  //ahead of time. 
-  //Also, it seems like these are all 0.5, even though the 
-  //mean is not necessarily 50th percentile
-  g.append("path")
+  // The national average line. Not creating an arc variable
+  // for this because we don't know any of the parameters
+  // ahead of time. Because these are percentiles, the average
+  // always, necessarily falls at 0.5
+  arcs.selectAll(".nationalAverageLine").remove();
+  arcs.append("path")
     .attr("d", d3.svg.arc()
-      .innerRadius(function(d) {
-        //We assume the data is normally distributed, so the mean
-        //is the 50th percentile
-        return radiusScale(0.5);})
-      .outerRadius(function(d){
-        return radiusScale(0.5) + 1;}));
+      .innerRadius(d => radiusScale(0.5))
+      .outerRadius(d => radiusScale(0.5) + 1)
+    ).attr("class", "nationalAverageLine");
 
   viz.append("line")
-    .style("stroke", "black")  
-    .attr("x1", -100) 
+    .style("stroke", "black")
+    .attr("x1", -100)
     .attr("y1", -(maxRadius + 15))
     .attr("x2", -80)
     .attr("y2",  -(maxRadius + 15))
@@ -470,7 +466,6 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("font-size", "14px")
     .text("National Average");
 }
-
 
 function updateDonutChart(target, datum={}, criteria=[]) {
   // TODO: Add a margin around the chart. Right now, a small width may cause
@@ -512,14 +507,20 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   const newPieData = updatePie(criteria);
 
   //Animate the new radius.
-  const criteriaGroups = viz.selectAll(".arc");
+  const arcs = viz.selectAll(".arc");
 
   //Add new radius information here. We'll do the same with
   //new angle information shortly.
-  criteriaGroups.each(function(d,i){
+  arcs.each(function(d,i){
     if (isUpdatingRadius) {
+      // d.data is actually a criterion
       d.normedValue = evaluateDatum(datum, [d.data]);
-      d.newOuter = radiusScale(d.normedValue);
+
+      // Convert the normedValue to an area and calculate the corresponding
+      // outer radius
+      const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
+      const desiredArea =  maxArea * d.normedValue;
+      d.newOuter =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
     } else d.newOuter = d.outerRadius;
 
     score += d.data.weight * d.normedValue;
@@ -531,7 +532,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     d.data = newPieData[i].data;
   });
 
-  const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
+  const criteriaArcs = arcs.selectAll(".criteriaSlice");
 
   criteriaArcs.transition()
     .duration(1000)
@@ -547,7 +548,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
       };
     });
 
-  criteriaGroups.selectAll(".metricLabel")
+  arcs.selectAll(".metricLabel")
     .transition()
     .duration(1000)
     .attr("x", function (d) {
@@ -558,6 +559,17 @@ function updateDonutChart(target, datum={}, criteria=[]) {
       const textAngle = (d.newEnd + d.newStart)/2;
       return -textRadius * Math.cos(textAngle);
     });
+
+    // The national average line. Not creating an arc variable
+    // for this because we don't know any of the parameters
+    // ahead of time. Because these are percentiles, the average
+    // always, necessarily falls at 0.5
+    arcs.selectAll(".nationalAverageLine").remove();
+    arcs.append("path")
+      .attr("d", d3.svg.arc()
+        .innerRadius(d => radiusScale(0.5))
+        .outerRadius(d => radiusScale(0.5) + 1)
+      ).attr("class", "nationalAverageLine");
 
   const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
   viz.selectAll(".stars")
