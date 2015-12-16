@@ -359,11 +359,11 @@ function addDonutChart(target, datum, criteria=[]) {
       //this is where I want to make a translation to the outside border
       var c = labelArc.centroid(d);
       const translate = "translate(" + c[0] +"," + c[1] + ")";
-      const roatateAngle = ((d.startAngle + d.endAngle)/2 - Math.PI/2) * (180/Math.PI);
-      const rotate = "rotate("  + roatateAngle +  ")"; 
+      const rotateAngle = ((d.startAngle + d.endAngle)/2 - Math.PI/2) * (180/Math.PI);
+      const rotate = "rotate("  + rotateAngle +  ")"; 
       //This is to make sure the text on the left side of the donut
       //Is right side up. 
-      const additionalRotate = roatateAngle >= 90 ? "rotate(180)" : "" ;
+      const additionalRotate = rotateAngle >= 90 ? "rotate(180)" : "" ;
       return  translate + " " + rotate + " " + additionalRotate;
     })
     .attr("x", 0)
@@ -612,11 +612,11 @@ function updateDonutChart(target, datum={}, criteria=[]) {
       const arcData = {"startAngle": d.newStart, "endAngle": d.newEnd};
       const c = labelArc.centroid(arcData);
       const translate = "translate(" + c[0] +"," + c[1] + ")";
-      const roatateAngle = ((d.newStart + d.newEnd)/2 - Math.PI/2) * (180/Math.PI);
-      const rotate = "rotate("  + roatateAngle +  ")"; 
+      const rotateAngle = ((d.newStart + d.newEnd)/2 - Math.PI/2) * (180/Math.PI);
+      const rotate = "rotate("  + rotateAngle +  ")"; 
       //This is to make sure the text on the left side of the donut
       //Is right side up. 
-      const additionalRotate = roatateAngle >= 90 ? "rotate(180)" : "" ;
+      const additionalRotate = rotateAngle >= 90 ? "rotate(180)" : "" ;
       return  translate + " " + rotate + " " + additionalRotate;
     })
     .attr("x", 0)
