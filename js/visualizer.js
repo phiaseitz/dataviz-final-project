@@ -378,7 +378,7 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const pie = d3.layout.pie()
     .sort(null)
-    // .padAngle(.02) //Does not work. What?!
+    .padAngle(.04)
     .value(d => d.weight);
 
   const g = viz.selectAll(".metricGroup")
@@ -495,7 +495,7 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
 
   const drilldownPie = d3.layout.pie()
     .sort(null)
-    // .padAngle(.02) //Does not work. What?!
+    .padAngle(.04)
     .value(d => d.weight)
     .startAngle(criteria.startAngle)
     .endAngle(criteria.endAngle);
