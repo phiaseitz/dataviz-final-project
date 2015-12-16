@@ -309,6 +309,7 @@ function accessValue(datum, keys, verbose=false) {
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
+//THIS IS THE MISSING CURLY BRACE
 function updateSidebar(datum, criteria) {
   const sidebar = d3.select('#detailSidebar');
   const isShowing = sidebar.classed('show');
@@ -340,6 +341,7 @@ function updateSidebar(datum, criteria) {
 
     d3.select('#zipField')
       .text(Address['ZIP']);
+  }
 }
 
 function addDonutChart(target, datum, criteria=[]) {
@@ -969,4 +971,4 @@ const ZTABLE = {
   "-3.48": 0.0003,
   "-3.49": 0.0003,
   "0.00": 0.5000
-}
+};
