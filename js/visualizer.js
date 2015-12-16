@@ -404,6 +404,35 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("x", 0)
     .attr("font-size", "16px")
     .text("stars");
+
+  //the national average line. Not creating an arc variable
+  //for this because we don't know any of the parameters 
+  //ahead of time. 
+  //Also, it seems like these are all 0.5, even though the 
+  //mean is not necessarily 50th percentile
+  g.append("path")
+    .attr("d", d3.svg.arc()
+      .innerRadius(function(d) {
+        //We assume the data is normally distributed, so the mean
+        //is the 50th percentile
+        return radiusScale(0.5);})
+      .outerRadius(function(d){
+        return radiusScale(0.5) + 1;}));
+
+  viz.append("line")
+    .style("stroke", "black")  
+    .attr("x1", -100) 
+    .attr("y1", -(maxRadius + 15))
+    .attr("x2", -80)
+    .attr("y2",  -(maxRadius + 15))
+    .attr("class", "natAvgLegend");
+
+  viz.append("text")
+    .attr("x", -75)
+    .attr("y", -(maxRadius + 15))
+    .attr("dy", "0.35em")
+    .attr("font-size", "14px")
+    .text("National Average");
 }
 
 
