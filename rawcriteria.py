@@ -40,7 +40,7 @@ RAW_CRITERIA = [
 
     {
         "name": "Comfort",
-        "weight": 1.0,
+        "weight": 0.5,
         "components": [
             {
                 "name": "Patients' Overall Rating of Hospital",
@@ -50,62 +50,62 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Patients' Rating of Cleanliness",
-                "weight": 0.0,
+                "weight": 1.0,
                 "metric":  ["StarRatings", "H_CLEAN_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Nurse Communication",
-                "weight": 0.0,
+                "weight": 1.0,
                 "metric":  ["StarRatings", "H_COMP_1_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Doctor Communication",
-                "weight": 0.0,
+                "weight": 1.0,
                 "metric":  ["StarRatings", "H_COMP_2_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Staff Responsiveness",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_COMP_3_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_COMP_3_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Pain Management",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_COMP_4_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_COMP_4_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Communication about Medicine",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_COMP_5_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_COMP_5_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Information on Discharge",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_COMP_6_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_COMP_6_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Care Transition",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_COMP_7_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_COMP_7_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Rating of Hospital Quietness",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_COMP_7_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_COMP_7_STAR_RATING"],
                 "invert": False,
             },
             {
                 "name": "Patients' Would Recommend",
-                "weight": 0.0,
-                "metric":  ["StarRatings", "H_RECMND_STAR_RATING"],
+                "weight": 1.0,
+                "metric": ["StarRatings", "H_RECMND_STAR_RATING"],
                 "invert": False,
             }
         ]
@@ -115,7 +115,7 @@ RAW_CRITERIA = [
 
     {
         "name": "Quality",
-        "weight": 1.0,
+        "weight": 0.5,
         "components": [
             {
                 "name": "Hospital-Wide 30-Day Readmission",
@@ -125,7 +125,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Heart Attack Care Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "components": [
                     {
                         "name": "Heart Attack 30-Day Mortality",
@@ -143,7 +143,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Coronary Heart Disease Care Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "components": [
                     {
                         "name": "Coronary Artery Bypass Grafting 30-Day Mortality",
@@ -161,7 +161,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Chronic Obstructive Pulmonary Disease Care Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "components": [
                     {
                         "name": "Chronic Obstructive Pulmonary Disease 30-Day Mortality",
@@ -179,7 +179,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Heart Failure Care Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "components": [
                     {
                         "name": "Heart Failure 30-Day Mortality",
@@ -197,7 +197,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Pneumonia Care Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "components": [
                     {
                         "name": "Pneumonia 30-Day Mortality",
@@ -215,7 +215,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Stroke Care Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "components": [
                     {
                         "name": "Stroke 30-Day Mortality",
@@ -233,7 +233,7 @@ RAW_CRITERIA = [
             },
             {
                 "name": "Hip/Knee Surgery Quality",
-                "weight": 0.0,
+                "weight": 1.0,
                 "metric": ["ReadmissionsAndDeaths", "READM_30_HIP_KNEE"],
                 "invert": True
             }
@@ -244,7 +244,7 @@ RAW_CRITERIA = [
 
     {
         "name": "Affordability",
-        "weight": 1.0,
+        "weight": 0.5,
         "components": [
             {
                 "name": "Affordability for Heart Attack Patients",
