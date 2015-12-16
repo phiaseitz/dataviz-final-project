@@ -121,7 +121,7 @@ function createOverlay(data, criteria, verbose=false) {
           .attr("id", "tooltip")
           .style({position: "absolute",
                   width:'100px',
-                  padding: "2px"});
+                  "margin-left": "10px"});
 
       function transform(d) {
         d = new google.maps.LatLng(d.value["Lat"], d.value["Long"]);
