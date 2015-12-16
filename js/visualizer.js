@@ -311,7 +311,7 @@ function showDetails(datum, criteria) {
   d3.select('#hospitalNameField')
     .text(datum['Hospital'].toLowerCase());
 
-  const { Address } = datum; 
+  const { Address } = datum;
 
   d3.select('#addressField')
     .text(Address['StreetAddress'].toLowerCase());
@@ -341,10 +341,7 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
-  const textRadius = maxRadius *1.15; 
-  const radiusScale = d3.scale.linear()
-    .domain([0, 1])
-    .range([minRadius, maxRadius]);
+  const textRadius = maxRadius * 1.15;
 
   // Background circle (shows "maxValue")
   const bkgArc = d3.svg.arc()
@@ -364,7 +361,13 @@ function addDonutChart(target, datum, criteria=[]) {
     .outerRadius(d => {
       // d.data is actually a criterion
       const normedValue = evaluateDatum(datum, [d.data]);
-      return radiusScale(normedValue);
+
+      // Convert the normedValue to an area and calculate the corresponding
+      // outer radius
+      const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
+      const desiredArea =  maxArea * normedValue;
+      const outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
+      return outerRadius;
     });
 
   const labelArc = d3.svg.arc()
