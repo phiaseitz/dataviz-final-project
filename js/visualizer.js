@@ -666,7 +666,6 @@ function createCategoryControls(target, criteria) {
       criterion["weight"] = Number(this.value);
       updateMapOverlay(criteria);
       updateSidebar({}, criteria);
-      // TODO: Regenerate hospital colors and donut chart
     })
 }
 
