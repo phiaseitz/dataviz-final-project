@@ -6,6 +6,9 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 map.setOptions({styles: styles});
+google.maps.event.addDomListener(window, 'load', map);
+
+var overlay = new google.maps.OverlayView();
 
 const COLORS = d3.scale.linear()
   .domain([0, 1])
@@ -20,10 +23,11 @@ Promise.all([
   new Promise((resolve, reject) => d3.json("hospitalData.json", resolve)),
   new Promise((resolve, reject) => d3.json("ratingCriteria.json", resolve)),
 ]).then(values => {
-  createOverlay(...values, true)
+  createOverlay(...values, true);
   const [data, criteria] = values;
   bindControls(criteria);
 });
+
 
 
 /**
@@ -36,10 +40,8 @@ Promise.all([
  * @param  {Boolean} verbose=false A flag for console output
  */
 function createOverlay(data, criteria, verbose=false) {
-  var overlay = new google.maps.OverlayView();
-
   // Add the container when the overlay is added to the map.
-  overlay.onAdd = function() {
+   overlay.onAdd = function() {
     //var layer = d3.select(this.getPanes().overlayLayer).append("div")
     //    .attr("class", "hospitals");
     var layer = d3.select(this.getPanes().overlayMouseTarget)
@@ -123,6 +125,14 @@ function createOverlay(data, criteria, verbose=false) {
     };
   };
 
+  overlay.onRemove = function(){
+    // var layer= d3.select(this.getPanes().overlayMouseTarget);
+    // layer.select("div").parentNode.removeChild(layer.select("div"))
+    // layer.select("div") = null;
+    this.div_.parentNode.removeChild(this.div_);
+    this.div_ = null;
+    console.log("removeMap");
+  };
   // Bind our overlay to the map…
   overlay.setMap(map);
 }
@@ -268,17 +278,16 @@ function addDonutChart(target, datum, criteria=[]) {
 
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
-
   const svg = d3.select(target);
   //Remove everything before drawing it again.
   svg.selectAll("*").remove();
 
   const width = svg[0][0].clientWidth;
-  svg.attr("height", width); //make SVG square
+  const height = svg[0][0].clientHeight;
 
   // Center donut viz in square SVG
   const viz = svg.append("g")
-    .attr("transform", `translate( ${width/2}, ${width/2})`);
+    .attr("transform", `translate( ${width/2}, ${height - width/2})`);
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
@@ -288,18 +297,13 @@ function addDonutChart(target, datum, criteria=[]) {
     .domain([0, 1])
     .range([minRadius, maxRadius]);
 
-  // Background circle (shows "maxValue")
   const bkgArc = d3.svg.arc()
     .outerRadius(maxRadius)
-    .innerRadius(minRadius)
-    .startAngle(0)
-    .endAngle(2*Math.PI);
+    .innerRadius(minRadius);
 
-  viz.append("g")
-    .attr("class", "bkgArc")
-    .append("path")
-    .attr("d", bkgArc)
-    .attr("fill", "lightgray");
+  const natAvgArc = d3.svg.arc()
+    .outerRadius(radiusScale(0.5) + 1)
+    .innerRadius(radiusScale(0.5));
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
@@ -310,28 +314,52 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const pie = d3.layout.pie()
     .sort(null)
+    .padAngle(.04)
     .value(d => d.weight);
 
-  const g = viz.selectAll(".arc")
+  const g = viz.selectAll(".metricGroup")
     .data(pie(criteria))
     .enter()
     .append("g")
-    .attr("class", "arc");
+    .attr("class", "metricGroup")
+    .attr("id", d => d.data.name + "Group");
 
   g.each(function(d){
      // d.data is actually a criterion
-    d.normedValue = evaluateDatum(datum, [d.data]);
+      d.normedValue = evaluateDatum(datum, [d.data]);
 
-    // Convert the normedValue to an area and calculate the corresponding
-    // outer radius
-    const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
-    const desiredArea =  maxArea * d.normedValue;
-    d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
+      // Convert the normedValue to an area and calculate the corresponding
+      // outer radius
+      const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
+      const desiredArea =  maxArea * d.normedValue;
+      d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
+
+      /*I'm open to other suggestions for how to do this, but we can't do the mouseover
+      event without somehow appending the datum to the data or using global variables.
+      This is unfrotunatle because it appends the datum three times, but I wasn't sure
+      if stuff would break if I broke the datum down into more pieces.
+
+      If we don't do this, the mouseover/drilldown just always uses the first datum.*/
+      d.datum = datum;
     })
     .append("path")
     .attr("d", arc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
-    .attr("class", "criteriaSlice");
+    .attr("id", d => d.data.name + "rating")
+    .attr("class", "rating");
+
+  g.append("path")
+    .attr("d", bkgArc)
+    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .style('opacity', 0.2)
+    .attr("id", d => d.data.name + "bkg")
+    .attr("class", "bkgArc staticRad")
+    .on("mouseover", function(d,i){
+      donutDrilldown(d.datum, d, radiusScale, arc, DONUT_COLORS[i], maxRadius);
+    })
+    .on("mouseout", function(d){
+      exitDonutDrilldown(d);
+    });
 
   g.append("text")
     .attr("dy", ".35em")
@@ -366,13 +394,12 @@ function addDonutChart(target, datum, criteria=[]) {
   //Also, it seems like these are all 0.5, even though the
   //mean is not necessarily 50th percentile
   g.append("path")
-    .attr("d", d3.svg.arc()
-      .innerRadius(function(d) {
-        //We assume the data is normally distributed, so the mean
-        //is the 50th percentile
-        return radiusScale(0.5);})
-      .outerRadius(function(d){
-        return radiusScale(0.5) + 1;}));
+    .each(function(d){
+      //This is gross and I don't like setting the outer and inner radii here, but it makes updating much
+    })
+    .attr("d", natAvgArc)
+    .attr("class", "natAvgLine staticRad")
+    .attr("id", d => d.data.name + "natAvgLine");
 
   viz.append("line")
     .style("stroke", "black")
@@ -390,6 +417,86 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("National Average");
 }
 
+function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
+  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
+  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
+  const natAvgLine = d3.select("#" + criteria.data.name + "natAvgLine");
+
+  metricRatingArc.style("visibility", "hidden");
+  natAvgLine.style("visibility","hidden");
+
+  const natAvgArc = d3.svg.arc()
+    .outerRadius(radiusScale(0.5) + 1)
+    .innerRadius(radiusScale(0.5));
+
+  const drilldownColor = d3.scale.linear()
+    .domain([0, 1])
+    .range(["#FFFFFF", color]);
+
+  const drilldownPie = d3.layout.pie()
+    .sort(null)
+    .padAngle(.04)
+    .value(d => d.weight)
+    .startAngle(criteria.startAngle)
+    .endAngle(criteria.endAngle);
+
+  const drilldown = metricRatingGroup.selectAll(".drilldownData")
+    .data(drilldownPie(criteria.data.components))
+    .enter()
+    .append("g")
+    .attr("class", "drilldownData");
+
+  drilldown.each(function (d) {
+      d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
+    })
+    .append("path")
+    .attr("d", arc)
+    .style("fill", function(d,i){
+      const percentThrough = i/(criteria.data.components.length);
+      //offset the percent though so we don't get a white square
+      return drilldownColor(0.75*percentThrough + 0.25);
+    })
+    .style("stroke-width", 2)
+    .style("stroke", "white");
+
+  drilldown.append("path")
+    .attr("d", natAvgArc)
+    .attr("class","drilldownNatAvg");
+
+  //Add the legend
+  drilldown.append("rect")
+    .attr("x", -100)
+    .attr("y", function(d,i){
+      return -(maxRadius +50 + (i) *25);
+    })
+    .attr("width", 20)
+    .attr("height", 20)
+    .attr("fill", function(d,i){
+      const percentThrough = i/(criteria.data.components.length);
+      //offset the percent though so we don't get a white square
+      return drilldownColor(0.75*percentThrough + 0.25);
+    });
+
+  drilldown.append("text")
+    .attr("x", -75)
+    .attr("y", function(d,i){
+      return -(maxRadius +50 + (i) *25);
+    })
+    .attr("dy", "1em")
+    .attr("font-size", "14px")
+    .text(d => d.data.name);
+}
+
+function exitDonutDrilldown(criteria){
+  const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
+  const natAvgLine = d3.select("#" + criteria.data.name + "natAvgLine");
+
+  metricRatingArc.style("visibility", "visible");
+  natAvgLine.style("visibility","visible");
+
+  const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
+  metricRatingGroup.selectAll(".drilldownData").remove();
+}
 
 function updateDonutChart(target, datum={}, criteria=[]) {
   // TODO: Add a margin around the chart. Right now, a small width may cause
@@ -406,7 +513,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
 
-  const textRadius = maxRadius + 20; // padding = 20
+  const textRadius = maxRadius * 1.15;
 
   var score = 0;
   var sumOfWeights = 0;
@@ -417,12 +524,20 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     .domain([0, 1])
     .range([minRadius, maxRadius]);
 
-  const labelArc = d3.svg.arc()
-    .innerRadius(textRadius)
-    .outerRadius(textRadius);
+  const bkgArc = d3.svg.arc()
+    .outerRadius(maxRadius)
+    .innerRadius(minRadius);
+
+  const natAvgArc = d3.svg.arc()
+    .outerRadius(radiusScale(0.5) + 1)
+    .innerRadius(radiusScale(0.5));
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
+
+  const labelArc = d3.svg.arc()
+    .innerRadius(textRadius)
+    .outerRadius(textRadius);
 
   const updatePie = d3.layout.pie()
     .sort(null)
@@ -431,11 +546,11 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   const newPieData = updatePie(criteria);
 
   //Animate the new radius.
-  const criteriaGroups = viz.selectAll(".arc");
+  const criteriaGroups = viz.selectAll(".metricGroup");
 
-  //Add new radius information here. We'll do the same with
-  //new angle information shortly.
+  //Add new radius and angle information here. 
   criteriaGroups.each(function(d,i){
+    d.datum = datum;
     if (isUpdatingRadius) {
       d.normedValue = evaluateDatum(datum, [d.data]);
       d.newOuter = radiusScale(d.normedValue);
@@ -450,7 +565,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     d.data = newPieData[i].data;
   });
 
-  const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
+  const criteriaArcs = criteriaGroups.selectAll(".rating");
 
   criteriaArcs.transition()
     .duration(1000)
@@ -463,6 +578,22 @@ function updateDonutChart(target, datum={}, criteria=[]) {
           d.startAngle = interpolateStart(t);
           d.outerRadius = interpolateRad(t);
           return arc(d);
+      };
+    });
+
+  //These are arcs where we don't need to update the radius, just the start and end angle
+  const staticRadArcs = criteriaGroups.selectAll(".staticRad");
+
+  staticRadArcs.transition()
+    .duration(1000)
+    .attrTween("d", function(d,i) {
+      const isBkgArc = this.classList.contains("bkgArc");
+      var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
+      var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
+      return function(t) {
+          d.endAngle = interpolateEnd(t);
+          d.startAngle = interpolateStart(t);
+          return isBkgArc ? bkgArc(d) : natAvgArc(d);
       };
     });
 
@@ -490,17 +621,60 @@ function updateDonutChart(target, datum={}, criteria=[]) {
 
 }
 
+function updateMapOverlay(){
+  overlay.setMap(null);
+  overlay.setMap(map);
+}
+
+/**
+node-ztable
+-----------
+
+This code, originally packaged for node, is taken from
+https://github.com/arjanfrans/node-ztable and is used to move from a statistical
+z-score to a percentile.
+
+Fun-Fact: The code was originally bugged. But thanks to the miracle of
+open-source, it has been fixed here and a PR has been submitted to the repo
+from whence it came.
+
+*/
+
+/**
+ * A helper function that, given a z-score (std deviations from the mean)
+ * returns the percentile to which that z-score maps.
+ *
+ * @param  {Number} zscore A z-score, the number of std. deviations from a mean
+ * @return {Number}        A percentile, as a 0-1 value
+ */
+function ztable(zscore) {
+  // Clean arguments
+  if (isNaN(zscore)) {
+    console.warn("ERROR: zscore", zscore, "is not a number!" )
+    return undefined
+  }
+
+  // Handle edge cases
+  if (zscore === 0) return 0.5000;
+  else if (zscore > 3.49) return 1;
+  else if (zscore < -3.49) return 0;
+
+  let percentile;
+
+  if (zscore > 0) percentile = 1-ZTABLE[(-zscore).toFixed(2)];
+  else percentile = ZTABLE[zscore.toFixed(2)];
+
+  return percentile;
+}
+
 function bindControls(criteria) {
   d3.select("#loadingIndicator").remove();
   const controls = d3.select("#controls");
   createCategoryControls(controls, criteria);
+
 }
 
 function createCategoryControls(target, criteria) {
-  target.append("h3")
-    .text('I care most about...')
-    .attr("class", "control-header");
-
   const categoryControls = target.append("div")
     .attr("id", "categoryControls")
     .selectAll(".categoryControl")
@@ -509,10 +683,8 @@ function createCategoryControls(target, criteria) {
     .append("div")
     .attr("class", "categoryControl");
 
-
   categoryControls.append("label")
-    .text(criterion => criterion.name)
-    .attr("class", "slider-heading");
+    .text(criterion => criterion.name);
 
   categoryControls.append("input")
     .attr({
@@ -525,46 +697,6 @@ function createCategoryControls(target, criteria) {
       // Note: this mutates the critera object
       criterion["weight"] = this.value;
       updateSidebar({}, criteria);
-
       // TODO: Regenerate hospital colors
-    })
-}
-
-function bindControls(criteria) {
-  d3.select("#loadingIndicator").remove();
-  const controls = d3.select("#controls");
-  createCategoryControls(controls, criteria);
-}
-
-function createCategoryControls(target, criteria) {
-  target.append("h3")
-    .text('I care most about...')
-    .attr("class", "control-header");
-
-  const categoryControls = target.append("div")
-    .attr("id", "categoryControls")
-    .selectAll(".categoryControl")
-    .data(criteria)
-    .enter()
-    .append("div")
-    .attr("class", "categoryControl");
-
-
-  categoryControls.append("label")
-    .text(criterion => criterion.name)
-    .attr("class", "slider-heading");
-
-  categoryControls.append("input")
-    .attr({
-      type: "range",
-      value: criterion => criterion["weight"],
-      max: 1,
-      step: 0.05,
-    })
-    .on("change", function (criterion, index) {
-      // Note: this mutates the criteria object
-      criterion["weight"] = Number(this.value);
-      updateSidebar({}, criteria);
-      // TODO: Regenerate hospital colors and donut chart
     })
 }
