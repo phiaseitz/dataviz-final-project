@@ -12,7 +12,7 @@ var overlay = new google.maps.OverlayView();
 
 const COLORS = d3.scale.linear()
   .domain([0, 1])
-  .range(["black", "#cedb9c"]);
+  .range(["black", "#99ffcc"]);
 
 const DONUT_COLORS = ["#779FA1", "#FF6542", "#564154"];
 
@@ -125,14 +125,6 @@ function createOverlay(data, criteria, verbose=false) {
     };
   };
 
-  overlay.onRemove = function(){
-    // var layer= d3.select(this.getPanes().overlayMouseTarget);
-    // layer.select("div").parentNode.removeChild(layer.select("div"))
-    // layer.select("div") = null;
-    this.div_.parentNode.removeChild(this.div_);
-    this.div_ = null;
-    console.log("removeMap");
-  };
   // Bind our overlay to the map…
   overlay.setMap(map);
 }
@@ -621,9 +613,16 @@ function updateDonutChart(target, datum={}, criteria=[]) {
 
 }
 
-function updateMapOverlay(){
-  overlay.setMap(null);
-  overlay.setMap(map);
+function updateMapOverlay(criteria){
+// Update marker color with change in settings/ weights
+
+  var markers = d3.selectAll(".marker").selectAll("circle");
+
+  markers.each(function(d,i){
+    d3.select(this)
+      .attr('fill', d => COLORS(evaluateDatum(d.value,criteria)));
+  });
+   
 }
 
 /**
@@ -694,9 +693,9 @@ function createCategoryControls(target, criteria) {
       step: 0.05,
     })
     .on("change", function (criterion, index) {
-      // Note: this mutates the critera object
-      criterion["weight"] = this.value;
+      // Note: this mutates the criteria object
+      criterion["weight"] = Number(this.value);
+      updateMapOverlay(criteria);
       updateSidebar({}, criteria);
-      // TODO: Regenerate hospital colors
     })
 }
