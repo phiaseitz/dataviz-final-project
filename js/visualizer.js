@@ -383,7 +383,6 @@ var DonutChart = function (target, datum, criteria) {
     .attr("class", "metricLabel")
     .style("visibility", d => (d.value === 0 ? "hidden" : "visibile"));
 
-
   viz.append("text")
     .attr("class", "stars")
     .attr("x", 0) //centered w/ transform
