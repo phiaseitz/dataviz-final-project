@@ -391,6 +391,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("text-anchor", "middle")
     .text(d => d.data.name);
 
+<<<<<<< HEAD
   viz.append("text")
     .attr("x", 0) //centered w/ transform
     .attr("y", 0) //center w/ transform
