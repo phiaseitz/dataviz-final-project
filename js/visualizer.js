@@ -305,7 +305,7 @@ function accessValue(datum, keys, verbose=false) {
  *
  * @param  {Object} datum The datum describing a hospital
  * @param  {Object} criteria The criteria by which to evaluate the datum
- * Check if the sidebar is already open. 
+ * Check if the sidebar is already open.
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
@@ -328,7 +328,7 @@ function updateSidebar(datum, criteria) {
     d3.select('#hospitalNameField')
     .text(datum['Hospital'].toLowerCase());
 
-    const { Address } = datum; 
+    const { Address } = datum;
 
     d3.select('#addressField')
       .text(Address['StreetAddress'].toLowerCase());
@@ -341,7 +341,7 @@ function updateSidebar(datum, criteria) {
 
     d3.select('#zipField')
       .text(Address['ZIP']);
-    }  
+    }
 }
 
 function addDonutChart(target, datum, criteria=[]) {
@@ -350,7 +350,7 @@ function addDonutChart(target, datum, criteria=[]) {
   // the text on the bottom to be cut-off
 
   const svg = d3.select(target);
-  //Remove everything before drawing it again. 
+  //Remove everything before drawing it again.
   svg.selectAll("*").remove();
 
   const width = svg[0][0].clientWidth;
@@ -362,7 +362,7 @@ function addDonutChart(target, datum, criteria=[]) {
 
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
-  const textRadius = maxRadius *1.15; 
+  const textRadius = maxRadius *1.15;
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
     .range([minRadius, maxRadius]);
@@ -474,30 +474,27 @@ function updateDonutChart(target, datum, criteria=[]) {
     .value(d => d.weight);
 
   const newPieData = updatePie(criteria);
-    
-  //Animate the new radius. 
+
+  //Animate the new radius.
   const criteriaGroups = viz.selectAll(".arc");
 
-  //Add new radius information here. We'll do the same with 
-  //new angle information shortly. 
+  //Add new radius information here. We'll do the same with
+  //new angle information shortly.
   criteriaGroups.each(function(d,i){
     if (isUpdatingRadius) {
       d.normedValue = evaluateDatum(datum, [d.data]);
       d.newOuter = radiusScale(d.normedValue);
-    } else {
-      d.newOuter = d.outerRadius;
-    }
-    console.log("weidht" , d.data.weight);
+    } else d.newOuter = d.outerRadius;
+
     score += d.data.weight * d.normedValue;
     sumOfWeights += +d.data.weight;
-    console.log("score: ", score);
-    console.log("sumOfWeights", sumOfWeights);
+
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
     d.value = newPieData[i].value;
     d.data = newPieData[i].data;
-    console.log("data",d);
+
   });
 
   const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
@@ -530,9 +527,13 @@ function updateDonutChart(target, datum, criteria=[]) {
     });
 
   viz.selectAll(".stars")
-    .text(d3.round((score/sumOfWeights)*5, 2) + " / 5");
-  
-    
+    .text(d3.round((score/sumOfWeights)*5, 2) + " / 5")
+    .append("tspan")
+    .attr("dy", "1.2em")
+    .attr("x", 0)
+    .attr("font-size", "16px")
+    .text("stars")
+    .style("text-transform", "none");
 }
 
 /**
