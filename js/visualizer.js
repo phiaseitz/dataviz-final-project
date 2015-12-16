@@ -299,10 +299,13 @@ function addDonutChart(target, datum, criteria=[]) {
     .domain([0, 1])
     .range([minRadius, maxRadius]);
 
-  // Background circle (shows "maxValue")
   const bkgArc = d3.svg.arc()
     .outerRadius(maxRadius)
     .innerRadius(minRadius);
+
+  const natAvgArc = d3.svg.arc()
+    .outerRadius(radiusScale(0.5) + 1)
+    .innerRadius(radiusScale(0.5));
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
@@ -339,13 +342,12 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("id", d => d.data.name + "rating")
     .attr("class", "rating");
 
-
   g.append("path")
     .attr("d", bkgArc)
     .style("fill", (d, i) =>  DONUT_COLORS[i])
     .style('opacity', 0.2)
     .attr("id", d => d.data.name + "bkg")
-    .attr("class", "bkgArc")
+    .attr("class", "bkgArc staticRad")
     .on("mouseover", function(d,i){
       donutDrilldown(datum, d, radiusScale, arc, DONUT_COLORS[i], maxRadius);
     })
@@ -386,13 +388,11 @@ function addDonutChart(target, datum, criteria=[]) {
   //Also, it seems like these are all 0.5, even though the
   //mean is not necessarily 50th percentile
   g.append("path")
-    .attr("d", d3.svg.arc()
-      .innerRadius(function(d) {
-        //We assume the data is normally distributed, so the mean
-        //is the 50th percentile
-        return radiusScale(0.5);})
-      .outerRadius(function(d){
-        return radiusScale(0.5) + 1;}));
+    .each(function(d){
+      //This is gross and I don't like setting the outer and inner radii here, but it makes updating much
+    })
+    .attr("d", natAvgArc)
+    .attr("class", "natAvgLine staticRad");
 
   viz.append("line")
     .style("stroke", "black")
@@ -508,12 +508,20 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     .domain([0, 1])
     .range([minRadius, maxRadius]);
 
-  const labelArc = d3.svg.arc()
-    .innerRadius(textRadius)
-    .outerRadius(textRadius);
+  const bkgArc = d3.svg.arc()
+    .outerRadius(maxRadius)
+    .innerRadius(minRadius);
+
+  const natAvgArc = d3.svg.arc()
+    .outerRadius(radiusScale(0.5) + 1)
+    .innerRadius(radiusScale(0.5));
 
   const arc = d3.svg.arc()
     .innerRadius(minRadius);
+
+  const labelArc = d3.svg.arc()
+    .innerRadius(textRadius)
+    .outerRadius(textRadius);
 
   const updatePie = d3.layout.pie()
     .sort(null)
@@ -522,10 +530,9 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   const newPieData = updatePie(criteria);
 
   //Animate the new radius.
-  const criteriaGroups = viz.selectAll(".arc");
+  const criteriaGroups = viz.selectAll(".metricGroup");
 
-  //Add new radius information here. We'll do the same with
-  //new angle information shortly.
+  //Add new radius and angle information here. 
   criteriaGroups.each(function(d,i){
     if (isUpdatingRadius) {
       d.normedValue = evaluateDatum(datum, [d.data]);
@@ -541,7 +548,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     d.data = newPieData[i].data;
   });
 
-  const criteriaArcs = criteriaGroups.selectAll(".criteriaSlice");
+  const criteriaArcs = criteriaGroups.selectAll(".rating");
 
   criteriaArcs.transition()
     .duration(1000)
@@ -554,6 +561,22 @@ function updateDonutChart(target, datum={}, criteria=[]) {
           d.startAngle = interpolateStart(t);
           d.outerRadius = interpolateRad(t);
           return arc(d);
+      };
+    });
+
+  //These are arcs where we don't need to update the radius, just the start and end angle
+  const staticRadArcs = criteriaGroups.selectAll(".staticRad");
+
+  staticRadArcs.transition()
+    .duration(1000)
+    .attrTween("d", function(d,i) {
+      const isBkgArc = this.classList.contains("bkgArc");
+      var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
+      var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
+      return function(t) {
+          d.endAngle = interpolateEnd(t);
+          d.startAngle = interpolateStart(t);
+          return isBkgArc ? bkgArc(d) : natAvgArc(d);
       };
     });
 

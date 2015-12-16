@@ -218,15 +218,16 @@ input[type=range]::-moz-range-thumb {
 
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
-=======
+}
+
 .rating {
   pointer-events: none;
 }
 
 .drilldownData{
   pointer-events: none;
->>>>>>> Split arcs on mouseover
 }
+<<<<<<< 1324b833b8ce3e17eedd74ee5380f1548b39e799
 =======
 >>>>>>> Category controls generated and effective, but need to force refresh
 =======
@@ -239,3 +240,11 @@ input[type=range]:focus::-moz-range-track {
   pointer-events: none;
 }
 >>>>>>> Split arcs on mouseover
+=======
+
+.natAvgLine {
+  pointer-events: none;
+  z-index: -1; 
+  position:relative;
+}
+>>>>>>> update function now works with angle padding also resolved a bunch of merge conflicts
