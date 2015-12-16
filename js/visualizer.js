@@ -281,10 +281,10 @@ function addDonutChart(target, datum, criteria=[]) {
   const viz = svg.append("g")
     .attr("transform", `translate( ${width/2}, ${height - width/2})`);
 
-  const maxRadius = 0.4 * width;
-  const minRadius = 0.2 * width;
+  const maxRadius = 0.3 * width;
+  const minRadius = 0.15 * width;
 
-  const textRadius = maxRadius *1.15;
+  const textRadius = maxRadius + 10;
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
     .range([minRadius, maxRadius]);
@@ -355,17 +355,31 @@ function addDonutChart(target, datum, criteria=[]) {
 
   g.append("text")
     .attr("dy", ".35em")
-    .attr("x", function (d) {
-      const textAngle = (d.endAngle + d.startAngle)/2;
-      return textRadius * Math.sin(textAngle);
+    .attr("transform", function(d) {
+      //this is where I want to make a translation to the outside border
+      var c = labelArc.centroid(d);
+      const translate = "translate(" + c[0] +"," + c[1] + ")";
+      const roatateAngle = ((d.startAngle + d.endAngle)/2 - Math.PI/2) * (180/Math.PI);
+      const rotate = "rotate("  + roatateAngle +  ")"; 
+      //This is to make sure the text on the left side of the donut
+      //Is right side up. 
+      const additionalRotate = roatateAngle >= 90 ? "rotate(180)" : "" ;
+      return  translate + " " + rotate + " " + additionalRotate;
     })
-    .attr("y", function(d){
-      const textAngle = (d.endAngle + d.startAngle)/2;
-      return -textRadius * Math.cos(textAngle);
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("font-size", "12px")
+    .attr("text-anchor", function (d) {
+      if((d.endAngle + d.startAngle)/2 >= Math.PI){
+        return "end";
+      } else {
+        return "begin";
+      }
     })
-    .attr("text-anchor", "middle")
     .text(d => d.data.name)
-    .attr("class", "metricLabel");
+    .attr("class", "metricLabel")
+    .style("visibility", d => (d.value === 0 ? "hidden" : "visibile"));
+    
 
   viz.append("text")
     .attr("class", "stars")
@@ -377,7 +391,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
-    .attr("font-size", "16px")
+    .attr("font-size", "14px")
     .text("stars");
 
   //the national average line. Not creating an arc variable
@@ -502,10 +516,10 @@ function updateDonutChart(target, datum={}, criteria=[]) {
 
   const width = svg[0][0].clientWidth;
 
-  const maxRadius = 0.4 * width;
-  const minRadius = 0.2 * width;
+  const maxRadius = 0.3 * width;
+  const minRadius = 0.15 * width;
 
-  const textRadius = maxRadius * 1.15;
+  const textRadius = maxRadius + 10;
 
   var score = 0;
   var sumOfWeights = 0;
@@ -590,15 +604,34 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     });
 
   criteriaGroups.selectAll(".metricLabel")
-    .transition()
-    .duration(1000)
-    .attr("x", function (d) {
-      const textAngle = (d.newEnd + d.newStart)/2;
-      return textRadius * Math.sin(textAngle);
+    // .transition()
+    // .duration(1000)
+    .attr("transform", "")
+    .attr("transform", function(d) {
+      //this is where I want to make a translation to the outside border
+      const arcData = {"startAngle": d.newStart, "endAngle": d.newEnd};
+      const c = labelArc.centroid(arcData);
+      const translate = "translate(" + c[0] +"," + c[1] + ")";
+      const roatateAngle = ((d.newStart + d.newEnd)/2 - Math.PI/2) * (180/Math.PI);
+      const rotate = "rotate("  + roatateAngle +  ")"; 
+      //This is to make sure the text on the left side of the donut
+      //Is right side up. 
+      const additionalRotate = roatateAngle >= 90 ? "rotate(180)" : "" ;
+      return  translate + " " + rotate + " " + additionalRotate;
     })
-    .attr("y", function(d){
-      const textAngle = (d.newEnd + d.newStart)/2;
-      return -textRadius * Math.cos(textAngle);
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("text-anchor", function (d) {
+      if((d.newEnd + d.newStart)/2 >= Math.PI){
+        return "end";
+      } else {
+        return "begin";
+      }
+    })
+    .text(d => d.data.name)
+    .style("visibility", function(d) {
+      const arcAngle = d.newEnd-d.newStart;
+      return arcAngle <= 0.01 ? "hidden" : "visible";
     });
 
   const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
