@@ -177,7 +177,27 @@ function createOverlay(data, criteria, verbose=false) {
           // Restore circle radius
           d3.select(this).attr("r", 6);
         })
-        .on("click", d => updateSidebar(d.value, criteria));
+        .on("click", function (d) {
+          updateSidebar(d.value, criteria);
+
+          // Deselect last selection
+          const lastSelection = d3.select(".selectedHospital");
+          if (!lastSelection.empty()) {
+            const normedValue = evaluateDatum(
+              lastSelection.datum().value,
+              criteria
+            );
+
+            lastSelection.classed("selectedHospital", false)
+              .attr("fill", COLORS(normedValue));
+          }
+
+          // Select this element
+          const currentSelection = d3.select(this);
+
+          currentSelection.classed("selectedHospital", true)
+            .attr("fill", "#FF6542");
+        });
 
 
       function transform(d) {
@@ -198,7 +218,7 @@ function createOverlay(data, criteria, verbose=false) {
     this.div_ = null;
     console.log("removeMap");
   };
-  
+
   // Bind our overlay to the map…
   overlay.setMap(map);
 }
@@ -301,7 +321,7 @@ function accessValue(datum, keys, verbose=false) {
  *
  * @param  {Object} datum The datum describing a hospital
  * @param  {Object} criteria The criteria by which to evaluate the datum
- * Check if the sidebar is already open. 
+ * Check if the sidebar is already open.
  * If so, update it, otherwise, remove everything and draw it
  * again*/
 
@@ -345,7 +365,7 @@ function addDonutChart(target, datum, criteria=[]) {
   // TODO: Add a margin around the chart. Right now, a small width may cause
   // the text on the bottom to be cut-off
   const svg = d3.select(target);
-  //Remove everything before drawing it again. 
+  //Remove everything before drawing it again.
   svg.selectAll("*").remove();
 
   const width = svg[0][0].clientWidth;
@@ -394,11 +414,13 @@ function addDonutChart(target, datum, criteria=[]) {
   g.each(function(d){
      // d.data is actually a criterion
       d.normedValue = evaluateDatum(datum, [d.data]);
+
       // Convert the normedValue to an area and calculate the corresponding
       // outer radius
       const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
       const desiredArea =  maxArea * d.normedValue;
       d.outerRadius =  Math.sqrt( desiredArea + Math.pow(minRadius, 2));
+
       /*I'm open to other suggestions for how to do this, but we can't do the mouseover
       event without somehow appending the datum to the data or using global variables.
       This is unfrotunatle because it appends the datum three times, but I wasn't sure
@@ -454,9 +476,9 @@ function addDonutChart(target, datum, criteria=[]) {
     .text("stars");
 
   //the national average line. Not creating an arc variable
-  //for this because we don't know any of the parameters 
-  //ahead of time. 
-  //Also, it seems like these are all 0.5, even though the 
+  //for this because we don't know any of the parameters
+  //ahead of time.
+  //Also, it seems like these are all 0.5, even though the
   //mean is not necessarily 50th percentile
   g.append("path")
     .each(function(d){
@@ -466,8 +488,8 @@ function addDonutChart(target, datum, criteria=[]) {
     .attr("class", "natAvgLine staticRad");
 
   viz.append("line")
-    .style("stroke", "black")  
-    .attr("x1", -100) 
+    .style("stroke", "black")
+    .attr("x1", -100)
     .attr("y1", -(maxRadius + 15))
     .attr("x2", -80)
     .attr("y2",  -(maxRadius + 15))
@@ -508,7 +530,7 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     .append("g")
     .attr("class", "drilldownData");
 
-  //For some reason I can't get the arcs to animate, so, they don't animate here. 
+  //For some reason I can't get the arcs to animate, so, they don't animate here.
   drilldown.each(function (d) {
       d.outerRadius = radiusScale(evaluateDatum(datum, [d.data]));
     })
@@ -572,7 +594,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   const maxRadius = 0.4 * width;
   const minRadius = 0.2 * width;
 
-  const textRadius = maxRadius * 1.15; 
+  const textRadius = maxRadius * 1.15;
 
   var score = 0;
   var sumOfWeights = 0;
@@ -607,7 +629,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
   //Animate the new radius.
   const criteriaGroups = viz.selectAll(".metricGroup");
 
-  //Add new radius and angle information here. 
+  //Add new radius and angle information here.
   criteriaGroups.each(function(d,i){
     d.datum = datum;
     if (isUpdatingRadius) {
