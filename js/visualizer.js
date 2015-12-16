@@ -410,8 +410,6 @@ function addDonutChart(target, datum, criteria=[]) {
 }
 
 function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
-  console.log("Datum: ", datum);
-  console.log("Criteria: ", criteria);
   const metricRatingArc = d3.select("#" + criteria.data.name + "rating");
   const metricRatingGroup = d3.select(metricRatingArc.node().parentNode);
   const natAvgLine = d3.select("#" + criteria.data.name + "natAvgLine");
