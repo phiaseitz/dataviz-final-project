@@ -524,7 +524,7 @@ function createCategoryControls(target, criteria) {
 
   categoryControls.append("label")
     .text(criterion => criterion.name)
-    .attr("class", "slider-heading");
+    .attr("class", "slider-label");
 
   categoryControls.append("input")
     .attr({
@@ -535,12 +535,12 @@ function createCategoryControls(target, criteria) {
     })
     .on("change", function (criterion, index) {
       // Note: this mutates the critera object
-      criterion["weight"] = this.value;
-      updateMapOverlay();
+      criterion["weight"] = Number(this.value);
+      // updateMapOverlay();
       updateSidebar({}, criteria);
 
       // TODO: Regenerate hospital colors
-    })
+    });
 }
 
 function createFilterControls(target, criteria) {
@@ -555,7 +555,11 @@ function createFilterControls(target, criteria) {
     .data(criteria)
     .enter()
     .append("div")
-    .attr("class", "filterControlGroup");
+    .attr("class", "filterControlGroup")
+
+  filterControlGroup.append("label")
+    .text(d => d.name)
+    .attr("class", "slider-label")
 
   // Generate metric-level controls
   const filterControls = filterControlGroup.selectAll(".filterControl")
@@ -569,11 +573,14 @@ function createFilterControls(target, criteria) {
     .attr({
       type: "checkbox",
       value: d => !!d.weight,
-    }).on("change", function(d) {
-      d.weight = this.value ? 1.0 : 0.0;
+    }).on("change", function(criterion) {
+      const checked = d3.select(this).property("checked");
+      criterion["weight"] = checked ? 1.0 : 0.0;
+      updateSidebar({}, criteria);
     });
 
   // Generate a label for each filter toggle
   filterControls.append("label")
-    .text(d => d.name);
+    .text(d => d.name)
+    .attr("class", "filter-label")
 }

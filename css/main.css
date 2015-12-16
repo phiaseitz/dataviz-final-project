@@ -143,14 +143,29 @@ button {
   margin-bottom: 30px;
 }
 
-.slider-heading {
+.slider-label {
   margin-bottom: 8px;
   align-self: flex-end;
   font-size: 1.1em;
 }
 
+.filter-label {
+  font-size: .8em;
+}
+
 .control-header {
   text-transform: none;
+}
+
+.filterControlGroup {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.filterControl {
+  /*align-self: flex-start;*/
+  margin-bottom: 5px;
 }
 
 /* -- Slider Styling -- */
@@ -208,4 +223,14 @@ input[type=range]::-moz-range-thumb {
 
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
+}
+
+/* -- Checkbox Styling -- */
+input[type="checkbox"] {
+  background: #CCC;
+  outline: none;
+}
+
+input[type="checkbox"]:checked + label::before {
+  border-color: #EEE;
 }
