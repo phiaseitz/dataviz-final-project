@@ -410,12 +410,11 @@ function addDonutChart(target, datum, criteria=[]) {
   g.append("path")
     .attr("d", d3.svg.arc()
       .innerRadius(function(d) {
-        console.log(d);
         //We assume the data is normally distributed, so the mean
         //is the 50th percentile
-        return radiusScale(0.5)})
+        return radiusScale(0.5);})
       .outerRadius(function(d){
-        return radiusScale(0.5) + 1}));
+        return radiusScale(0.5) + 1;}));
 
   viz.append("line")
     .style("stroke", "black")  
