@@ -138,7 +138,6 @@ button {
   align-self: center;
 }
 
-<<<<<<< 5ad2c385fde92a8aea1fb78ec8606659ede36d5d
 .categoryControl {
   display: flex;
   flex-direction: column;
@@ -220,8 +219,10 @@ input[type=range]:focus::-moz-range-track {
   pointer-events: none;
 }
 
+
 .natAvgLine {
   pointer-events: none;
   z-index: -1; 
   position:relative;
 }
+
