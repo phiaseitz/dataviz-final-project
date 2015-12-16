@@ -18,7 +18,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Cleanliness",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.9608026806316887,
           "mean": 2.9605809128630707
@@ -31,7 +31,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Nurse Communication",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.9940492961758112,
           "mean": 3.425903971547125
@@ -44,7 +44,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Doctor Communication",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 1.0183026064212595,
           "mean": 3.2590397154712507
@@ -57,7 +57,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Staff Responsiveness",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 1.0756460101196268,
           "mean": 3.0527563722584468
@@ -70,7 +70,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Pain Management",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.8790467103017308,
           "mean": 3.267042086544161
@@ -83,7 +83,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Communication about Medicine",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 1.0104716847119815,
           "mean": 2.8227622999407234
@@ -96,7 +96,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Information on Discharge",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.9344798571633478,
           "mean": 3.497628927089508
@@ -109,7 +109,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Care Transition",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.9917384241647322,
           "mean": 3.0583876704208652
@@ -122,7 +122,7 @@
       {
         "invert": false,
         "name": "Patients' Rating of Hospital Quietness",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.9917384241647322,
           "mean": 3.0583876704208652
@@ -135,7 +135,7 @@
       {
         "invert": false,
         "name": "Patients' Would Recommend",
-        "weight": 0,
+        "weight": 1,
         "distribution": {
           "stdDev": 0.942013862363968,
           "mean": 3.2421458209839953
@@ -194,7 +194,7 @@
             ]
           }
         ],
-        "weight": 0
+        "weight": 1
       },
       {
         "name": "Coronary Heart Disease Care Quality",
@@ -226,7 +226,7 @@
             ]
           }
         ],
-        "weight": 0
+        "weight": 1
       },
       {
         "name": "Chronic Obstructive Pulmonary Disease Care Quality",
@@ -258,7 +258,7 @@
             ]
           }
         ],
-        "weight": 0
+        "weight": 1
       },
       {
         "name": "Heart Failure Care Quality",
@@ -290,7 +290,7 @@
             ]
           }
         ],
-        "weight": 0
+        "weight": 1
       },
       {
         "name": "Pneumonia Care Quality",
@@ -322,7 +322,7 @@
             ]
           }
         ],
-        "weight": 0
+        "weight": 1
       },
       {
         "name": "Stroke Care Quality",
@@ -354,7 +354,7 @@
             ]
           }
         ],
-        "weight": 0
+        "weight": 1
       },
       {
         "invert": true,

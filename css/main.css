@@ -124,11 +124,18 @@ button {
 }
 
 #controls {
+<<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
   margin: 0 auto;
   display: flex;
   justify-content: center;
   flex-direction: column;
   width: 90%;
+=======
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+>>>>>>> Category controls generated and effective, but need to force refresh
   height: 100%;
   font-family: 'Source Sans Pro', sans-serif;
 }
@@ -136,7 +143,10 @@ button {
 #loadingIndicator {
   align-self: center;
 }
+<<<<<<< 59eae88275fddbdf43d8ea37ae364f872d343184
+<<<<<<< 5e83a1343ed9c3a4518b222789bb5959412b8d44
 
+<<<<<<< 5ad2c385fde92a8aea1fb78ec8606659ede36d5d
 .categoryControl {
   display: flex;
   flex-direction: column;
@@ -209,3 +219,40 @@ input[type=range]::-moz-range-thumb {
 input[type=range]:focus::-moz-range-track {
     background: #ccc;
 }
+
+.rating {
+  pointer-events: none;
+}
+
+.drilldownData{
+  pointer-events: none;
+}
+<<<<<<< HEAD
+<<<<<<< 1324b833b8ce3e17eedd74ee5380f1548b39e799
+=======
+>>>>>>> Category controls generated and effective, but need to force refresh
+=======
+
+.rating {
+  pointer-events: none;
+}
+
+.drilldownData{
+  pointer-events: none;
+}
+>>>>>>> Split arcs on mouseover
+=======
+=======
+
+>>>>>>> cbc04c24a8c1cb4f0dc43c1428786f84accbb650
+
+.natAvgLine {
+  pointer-events: none;
+  z-index: -1; 
+  position:relative;
+}
+<<<<<<< HEAD
+>>>>>>> update function now works with angle padding also resolved a bunch of merge conflicts
+=======
+
+>>>>>>> cbc04c24a8c1cb4f0dc43c1428786f84accbb650
