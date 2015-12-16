@@ -609,6 +609,7 @@ function updateDonutChart(target, datum={}, criteria=[]) {
 
   //Add new radius and angle information here. 
   criteriaGroups.each(function(d,i){
+    d.datum = datum;
     if (isUpdatingRadius) {
       d.normedValue = evaluateDatum(datum, [d.data]);
       d.newOuter = radiusScale(d.normedValue);
