@@ -281,10 +281,10 @@ function addDonutChart(target, datum, criteria=[]) {
   const viz = svg.append("g")
     .attr("transform", `translate( ${width/2}, ${height - width/2})`);
 
-  const maxRadius = 0.4 * width;
-  const minRadius = 0.2 * width;
+  const maxRadius = 0.3 * width;
+  const minRadius = 0.15 * width;
 
-  const textRadius = maxRadius *1.15;
+  const textRadius = maxRadius + 10;
   const radiusScale = d3.scale.linear()
     .domain([0, 1])
     .range([minRadius, maxRadius]);
@@ -355,17 +355,31 @@ function addDonutChart(target, datum, criteria=[]) {
 
   g.append("text")
     .attr("dy", ".35em")
-    .attr("x", function (d) {
-      const textAngle = (d.endAngle + d.startAngle)/2;
-      return textRadius * Math.sin(textAngle);
+    .attr("transform", function(d) {
+      //this is where I want to make a translation to the outside border
+      var c = labelArc.centroid(d);
+      const translate = "translate(" + c[0] +"," + c[1] + ")";
+      const roatateAngle = ((d.startAngle + d.endAngle)/2 - Math.PI/2) * (180/Math.PI);
+      const rotate = "rotate("  + roatateAngle +  ")"; 
+      //This is to make sure the text on the left side of the donut
+      //Is right side up. 
+      const additionalRotate = roatateAngle >= 90 ? "rotate(180)" : "" ;
+      return  translate + " " + rotate + " " + additionalRotate;
     })
-    .attr("y", function(d){
-      const textAngle = (d.endAngle + d.startAngle)/2;
-      return -textRadius * Math.cos(textAngle);
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("font-size", "12px")
+    .attr("text-anchor", function (d) {
+      if((d.endAngle + d.startAngle)/2 >= Math.PI){
+        return "end";
+      } else {
+        return "begin";
+      }
     })
-    .attr("text-anchor", "middle")
     .text(d => d.data.name)
-    .attr("class", "metricLabel");
+    .attr("class", "metricLabel")
+    .style("visibility", d => (d.value === 0 ? "hidden" : "visibile"));
+    
 
   viz.append("text")
     .attr("class", "stars")
@@ -377,7 +391,7 @@ function addDonutChart(target, datum, criteria=[]) {
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
-    .attr("font-size", "16px")
+    .attr("font-size", "14px")
     .text("stars");
 
   //the national average line. Not creating an arc variable
@@ -395,17 +409,17 @@ function addDonutChart(target, datum, criteria=[]) {
 
   viz.append("line")
     .style("stroke", "black")
-    .attr("x1", -100)
-    .attr("y1", -(maxRadius + 15))
-    .attr("x2", -80)
-    .attr("y2",  -(maxRadius + 15))
+    .attr("x1", -150)
+    .attr("y1", -(maxRadius + 80))
+    .attr("x2", -135)
+    .attr("y2",  -(maxRadius + 80))
     .attr("class", "natAvgLegend");
 
   viz.append("text")
-    .attr("x", -75)
-    .attr("y", -(maxRadius + 15))
+    .attr("x", -120)
+    .attr("y", -(maxRadius + 80))
     .attr("dy", "0.35em")
-    .attr("font-size", "14px")
+    .attr("font-size", "12px")
     .text("National Average");
 }
 
@@ -457,12 +471,12 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
 
   //Add the legend
   drilldown.append("rect")
-    .attr("x", -100)
+    .attr("x", -150)
     .attr("y", function(d,i){
-      return -(maxRadius +50 + (i) *25);
+      return -(maxRadius +105 + (i)*14);
     })
-    .attr("width", 20)
-    .attr("height", 20)
+    .attr("width", 12)
+    .attr("height", 12)
     .attr("fill", function(d,i){
       const percentThrough = i/(criteria.data.components.length);
       //offset the percent though so we don't get a white square
@@ -470,12 +484,12 @@ function donutDrilldown(datum, criteria, radiusScale, arc, color, maxRadius){
     });
 
   drilldown.append("text")
-    .attr("x", -75)
+    .attr("x", -135)
     .attr("y", function(d,i){
-      return -(maxRadius +50 + (i) *25);
+      return -(maxRadius +105 + (i) *14);
     })
-    .attr("dy", "1em")
-    .attr("font-size", "14px")
+    .attr("dy", "0.85em")
+    .attr("font-size", "10px")
     .text(d => d.data.name);
 }
 
@@ -502,10 +516,10 @@ function updateDonutChart(target, datum={}, criteria=[]) {
 
   const width = svg[0][0].clientWidth;
 
-  const maxRadius = 0.4 * width;
-  const minRadius = 0.2 * width;
+  const maxRadius = 0.3 * width;
+  const minRadius = 0.15 * width;
 
-  const textRadius = maxRadius * 1.15;
+  const textRadius = maxRadius + 10;
 
   var score = 0;
   var sumOfWeights = 0;
@@ -590,15 +604,34 @@ function updateDonutChart(target, datum={}, criteria=[]) {
     });
 
   criteriaGroups.selectAll(".metricLabel")
-    .transition()
-    .duration(1000)
-    .attr("x", function (d) {
-      const textAngle = (d.newEnd + d.newStart)/2;
-      return textRadius * Math.sin(textAngle);
+    // .transition()
+    // .duration(1000)
+    .attr("transform", "")
+    .attr("transform", function(d) {
+      //this is where I want to make a translation to the outside border
+      const arcData = {"startAngle": d.newStart, "endAngle": d.newEnd};
+      const c = labelArc.centroid(arcData);
+      const translate = "translate(" + c[0] +"," + c[1] + ")";
+      const roatateAngle = ((d.newStart + d.newEnd)/2 - Math.PI/2) * (180/Math.PI);
+      const rotate = "rotate("  + roatateAngle +  ")"; 
+      //This is to make sure the text on the left side of the donut
+      //Is right side up. 
+      const additionalRotate = roatateAngle >= 90 ? "rotate(180)" : "" ;
+      return  translate + " " + rotate + " " + additionalRotate;
     })
-    .attr("y", function(d){
-      const textAngle = (d.newEnd + d.newStart)/2;
-      return -textRadius * Math.cos(textAngle);
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("text-anchor", function (d) {
+      if((d.newEnd + d.newStart)/2 >= Math.PI){
+        return "end";
+      } else {
+        return "begin";
+      }
+    })
+    .text(d => d.data.name)
+    .style("visibility", function(d) {
+      const arcAngle = d.newEnd-d.newStart;
+      return arcAngle <= 0.01 ? "hidden" : "visible";
     });
 
   const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
@@ -674,6 +707,10 @@ function bindControls(criteria) {
 }
 
 function createCategoryControls(target, criteria) {
+   target.append("h3")
+    .text('I care most about...')
+    .attr("class", "control-header");
+
   const categoryControls = target.append("div")
     .attr("id", "categoryControls")
     .selectAll(".categoryControl")
