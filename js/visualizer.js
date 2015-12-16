@@ -1,6 +1,6 @@
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 4,
+  zoom: 5,
   center: new google.maps.LatLng(39.828215,-98.5817593),
   mapTypeId: google.maps.MapTypeId.ROADMAP
 });
