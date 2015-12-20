@@ -69,7 +69,12 @@ function createOverlay(data, criteria, verbose=false) {
           cx: padding,
           cy: padding,
           id: d => d.key,
-          fill: d => COLORS(evaluateDatum(d.value, criteria, verbose)),
+          fill: function(d) {
+            if (evaluateDatum(d.value, criteria, verbose) === null){
+              return "#999999";
+            }
+            return COLORS(evaluateDatum(d.value, criteria, verbose));
+          },
         })
         .on("mouseenter", function (d) {
           const circle = d3.select(this);
@@ -153,12 +158,17 @@ function evaluateDatum(datum, criteria, verbose=false) {
   criteria.forEach((criterion) => {
     if ("components" in criterion) {
       const { weight, components } = criterion;
-      weightedSumOfMetrics += weight * evaluateDatum(
+      var evaluatedComponenets = evaluateDatum(
         datum,
         components,
         verbose
       );
-      sumOfWeights += criterion["weight"];
+
+      if (evaluatedComponenets !== null){
+        weightedSumOfMetrics += weight * evaluatedComponenets;
+        sumOfWeights += criterion["weight"];
+      }
+      
     } else if (
       "metric" in criterion &&
       "invert" in criterion &&
@@ -168,7 +178,7 @@ function evaluateDatum(datum, criteria, verbose=false) {
       const rawValue = accessValue(datum, metric);
 
       // If the metric value is unavailable, ignore this metric and weighting
-      if (!_.isUndefined(rawValue)) {
+      if (!_.isUndefined(rawValue) && rawValue !== null) {
         const normedValue = getNormalizedValue(rawValue, distribution);
         const metricValue = invert ? 1-normedValue : normedValue;
 
@@ -183,7 +193,9 @@ function evaluateDatum(datum, criteria, verbose=false) {
   });
 
   // Divide out sum by the acumulated weights
-  if (sumOfWeights === 0) return 0;
+  if (sumOfWeights === 0) {
+    return null;
+  }
   return weightedSumOfMetrics / sumOfWeights;
 }
 
@@ -222,11 +234,15 @@ function accessValue(datum, keys, verbose=false) {
     return undefined;
   }
   else if (keys.length > 1) return accessValue(datum[key], keys.slice(1));
+  //If the data isn't available, return null. 
+  else if (datum[key] === "Not Available"){
+    return null;
+  }
   else if(isNaN(datum[key].replace(/[^0-9\.]+/g, ""))) {
     if (verbose) console.warn("ERROR: value '", datum[key], "' cannot be parsed to a number.");
     return undefined;
   }
-  else return Number(datum[key].replace(/[^0-9\.]+/g, ""));
+  else return Number(datum[key].replace(/[^0-9\.]+/g, "")); 
 }
 
 /**
