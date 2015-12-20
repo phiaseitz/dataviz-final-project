@@ -664,8 +664,6 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
     });
 
   criteriaGroups.selectAll(".metricLabel")
-    // .transition()
-    // .duration(1000)
     .attr("transform", "")
     .attr("transform", function(d) {
       //this is where I want to make a translation to the outside border
@@ -706,14 +704,19 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
 
 }
 
-function updateMapOverlay(criteria){
+function updateMapOverlay(criteria, verbose=false){
 // Update marker color with change in settings/ weights
 
   var markers = d3.selectAll(".marker").selectAll("circle");
 
   markers.each(function(d,i){
     d3.select(this)
-      .attr('fill', d => COLORS(evaluateDatum(d.value,criteria)));
+      .attr('fill', function(d) {
+        if (evaluateDatum(d.value, criteria, verbose) === null){
+          return "#999999";
+        }
+        return COLORS(evaluateDatum(d.value, criteria, verbose));
+      });
   });
 
 }
