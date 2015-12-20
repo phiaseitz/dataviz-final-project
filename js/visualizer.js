@@ -345,9 +345,6 @@ var DonutChart = function (target, datum, criteria) {
   g.each(function(d){
      // d.data is actually a criterion
       d.normedValue = evaluateDatum(datum, [d.data]);
-      if (d.normedValue === null){
-        console.log("null");
-      }
       // Convert the normedValue to an area and calculate the corresponding
       // outer radius
       const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
@@ -601,9 +598,10 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
     d.normedValue = evaluateDatum(this.datum, [d.data]);
     d.newOuter = radiusScale(d.normedValue);
 
-    score += d.data.weight * d.normedValue;
-    sumOfWeights += +d.data.weight;
-
+    if(d.normedValue !== null){
+      score += d.data.weight * d.normedValue;
+      sumOfWeights += +d.data.weight;
+    }
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
@@ -631,7 +629,6 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
   const bkgArcs = criteriaGroups.selectAll(".bkgArc");
 
   bkgArcs.style("fill", function(d,i){
-    console.log(i);
     if (d.normedValue === null){
         return "#999999";
       }
@@ -692,9 +689,9 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
       return arcAngle <= 0.01 ? "hidden" : "visible";
     });
 
-  const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
+  const starRating = sumOfWeights === 0 ? "--" : d3.round((score/sumOfWeights) * 5, 2) + " / 5";
   viz.selectAll(".stars")
-    .text(starRating + " / 5")
+    .text(starRating)
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
