@@ -345,7 +345,9 @@ var DonutChart = function (target, datum, criteria) {
   g.each(function(d){
      // d.data is actually a criterion
       d.normedValue = evaluateDatum(datum, [d.data]);
-
+      if (d.normedValue === null){
+        console.log("null");
+      }
       // Convert the normedValue to an area and calculate the corresponding
       // outer radius
       const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
@@ -368,7 +370,13 @@ var DonutChart = function (target, datum, criteria) {
 
   g.append("path")
     .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .style("fill", function(d, i){
+      d.arcColor = DONUT_COLORS[i];
+      if (d.normedValue === null){
+        return "#999999";
+      }
+      return d.arcColor;
+    })
     .style('opacity', 0.2)
     .attr("id", d => d.data.name + "bkg")
     .attr("class", "bkgArc staticRad")
@@ -406,13 +414,18 @@ var DonutChart = function (target, datum, criteria) {
     .attr("class", "metricLabel")
     .style("visibility", d => (d.value === 0 ? "hidden" : "visibile"));
 
+
+  const evalScore = evaluateDatum(datum, criteria);
+  const starRating = evalScore === null ? "--" : d3.round(evalScore*5, 2) + " / 5";
+
+
   viz.append("text")
     .attr("class", "stars")
     .attr("x", 0) //centered w/ transform
     .attr("y", 0) //center w/ transform
     .attr("font-size", "30px")
     .attr("text-anchor", "middle")
-    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
+    .text(starRating)// convert to weighted "star" rating
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
@@ -615,18 +628,38 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
     });
 
   //These are arcs where we don't need to update the radius, just the start and end angle
-  const staticRadArcs = criteriaGroups.selectAll(".staticRad");
+  const bkgArcs = criteriaGroups.selectAll(".bkgArc");
 
-  staticRadArcs.transition()
+  bkgArcs.style("fill", function(d,i){
+    console.log(i);
+    if (d.normedValue === null){
+        return "#999999";
+      }
+    return d.arcColor;
+  })
+  .transition()
+  .duration(1000)
+  .attrTween("d", function(d,i) {
+    var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
+    var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
+    return function(t) {
+        d.endAngle = interpolateEnd(t);
+        d.startAngle = interpolateStart(t);
+        return bkgArc(d);
+    };
+  });
+
+  const natAvgArcs = criteriaGroups.selectAll(".natAvgLine");
+
+  natAvgArcs.transition()
     .duration(1000)
     .attrTween("d", function(d,i) {
-      const isBkgArc = this.classList.contains("bkgArc");
       var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
       var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
       return function(t) {
           d.endAngle = interpolateEnd(t);
           d.startAngle = interpolateStart(t);
-          return isBkgArc ? bkgArc(d) : natAvgArc(d);
+          return natAvgArc(d);
       };
     });
 
