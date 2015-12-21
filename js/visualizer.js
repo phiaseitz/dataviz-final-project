@@ -69,12 +69,7 @@ function createOverlay(data, criteria, verbose=false) {
           cx: padding,
           cy: padding,
           id: d => d.key,
-          fill: function(d) {
-            if (evaluateDatum(d.value, criteria, verbose) === null){
-              return "#999999";
-            }
-            return COLORS(evaluateDatum(d.value, criteria, verbose));
-          },
+          fill: d => getFillColor(d, criteria, verbose),
         })
         .on("mouseenter", function (d) {
           const circle = d3.select(this);
@@ -121,7 +116,7 @@ function createOverlay(data, criteria, verbose=false) {
           currentSelection.classed("selectedHospital", true)
             .attr("fill", "#FF6542");
         });
-        
+
         layer.append("div")
           .attr("id", "tooltip")
           .style({position: "absolute",
@@ -168,7 +163,7 @@ function evaluateDatum(datum, criteria, verbose=false) {
         weightedSumOfMetrics += weight * evaluatedComponenets;
         sumOfWeights += criterion["weight"];
       }
-      
+
     } else if (
       "metric" in criterion &&
       "invert" in criterion &&
@@ -234,7 +229,7 @@ function accessValue(datum, keys, verbose=false) {
     return undefined;
   }
   else if (keys.length > 1) return accessValue(datum[key], keys.slice(1));
-  //If the data isn't available, return null. 
+  //If the data isn't available, return null.
   else if (datum[key] === "Not Available"){
     return null;
   }
@@ -242,7 +237,7 @@ function accessValue(datum, keys, verbose=false) {
     if (verbose) console.warn("ERROR: value '", datum[key], "' cannot be parsed to a number.");
     return undefined;
   }
-  else return Number(datum[key].replace(/[^0-9\.]+/g, "")); 
+  else return Number(datum[key].replace(/[^0-9\.]+/g, ""));
 }
 
 /**
@@ -367,11 +362,9 @@ var DonutChart = function (target, datum, criteria) {
 
   g.append("path")
     .attr("d", bkgArc)
-    .style("fill", function(d, i){
+    .style("fill", function(d, i) {
       d.arcColor = DONUT_COLORS[i];
-      if (d.normedValue === null){
-        return "#999999";
-      }
+      if (d.normedValue === null) return "#999999";
       return d.arcColor;
     })
     .style('opacity', 0.2)
@@ -391,9 +384,9 @@ var DonutChart = function (target, datum, criteria) {
       var c = labelArc.centroid(d);
       const translate = "translate(" + c[0] +"," + c[1] + ")";
       const rotateAngle = ((d.startAngle + d.endAngle)/2 - Math.PI/2) * (180/Math.PI);
-      const rotate = "rotate("  + rotateAngle +  ")"; 
+      const rotate = "rotate("  + rotateAngle +  ")";
       //This is to make sure the text on the left side of the donut
-      //Is right side up. 
+      //Is right side up.
       const additionalRotate = rotateAngle >= 90 ? "rotate(180)" : "" ;
       return  translate + " " + rotate + " " + additionalRotate;
     })
@@ -598,10 +591,11 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
     d.normedValue = evaluateDatum(this.datum, [d.data]);
     d.newOuter = radiusScale(d.normedValue);
 
-    if(d.normedValue !== null){
+    if(d.normedValue !== null) {
       score += d.data.weight * d.normedValue;
       sumOfWeights += +d.data.weight;
     }
+
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
     d.newEnd = newPieData[i].endAngle;
@@ -628,17 +622,15 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
   //These are arcs where we don't need to update the radius, just the start and end angle
   const bkgArcs = criteriaGroups.selectAll(".bkgArc");
 
-  bkgArcs.style("fill", function(d,i){
-    if (d.normedValue === null){
-        return "#999999";
-      }
+  bkgArcs.style("fill", function(d, i) {
+    if (d.normedValue === null) return "#999999";
     return d.arcColor;
   })
   .transition()
   .duration(1000)
-  .attrTween("d", function(d,i) {
+  .attrTween("d", function(d, i) {
     var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
-    var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
+    var interpolateStart = d3.interpolate(d.startAngle, d.newStart);
     return function(t) {
         d.endAngle = interpolateEnd(t);
         d.startAngle = interpolateStart(t);
@@ -668,9 +660,9 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
       const c = labelArc.centroid(arcData);
       const translate = "translate(" + c[0] +"," + c[1] + ")";
       const rotateAngle = ((d.newStart + d.newEnd)/2 - Math.PI/2) * (180/Math.PI);
-      const rotate = "rotate("  + rotateAngle +  ")"; 
+      const rotate = "rotate("  + rotateAngle +  ")";
       //This is to make sure the text on the left side of the donut
-      //Is right side up. 
+      //Is right side up.
       const additionalRotate = rotateAngle >= 90 ? "rotate(180)" : "" ;
       return  translate + " " + rotate + " " + additionalRotate;
     })
@@ -708,14 +700,21 @@ function updateMapOverlay(criteria, verbose=false){
 
   markers.each(function(d,i){
     d3.select(this)
-      .attr('fill', function(d) {
-        if (evaluateDatum(d.value, criteria, verbose) === null){
-          return "#999999";
-        }
-        return COLORS(evaluateDatum(d.value, criteria, verbose));
-      });
+      .attr('fill', d => getFillColor(d, criteria, verbose));
   });
 
+}
+
+/**
+ * Given a datum and criteria, return a fill color appropriate for those
+ * parameters.
+ * @param  {Object} datum A hospital's data
+ * @param {Object} criteria The criteria on which to rank a hospital
+ * @return {String}   A color hex-code
+ */
+function getFillColor(datum, criteria, verbose=false) {
+  const evaluation = evaluateDatum(datum.value, criteria, verbose);
+  return _.isNull(evaluation) ? "#999999" : COLORS(evaluation);
 }
 
 function bindControls(criteria) {
