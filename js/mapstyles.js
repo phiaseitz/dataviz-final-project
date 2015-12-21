@@ -5,7 +5,7 @@ var styles = [
     stylers: [
       {hue: "#669999"},
       {saturation: -10},
-      {lightness: 0},
+      {lightness: 90},
       {visibility: "simplified"}
     ]
   },
