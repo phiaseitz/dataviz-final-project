@@ -69,7 +69,7 @@ function createOverlay(data, criteria, verbose=false) {
           cx: padding,
           cy: padding,
           id: d => d.key,
-          fill: d => COLORS(evaluateDatum(d.value, criteria, verbose)),
+          fill: d => getFillColor(d, criteria, verbose),
         })
         .on("mouseenter", function (d) {
           const circle = d3.select(this);
@@ -116,7 +116,7 @@ function createOverlay(data, criteria, verbose=false) {
           currentSelection.classed("selectedHospital", true)
             .attr("fill", "#FF6542");
         });
-        
+
         layer.append("div")
           .attr("id", "tooltip")
           .style({position: "absolute",
@@ -153,12 +153,17 @@ function evaluateDatum(datum, criteria, verbose=false) {
   criteria.forEach((criterion) => {
     if ("components" in criterion) {
       const { weight, components } = criterion;
-      weightedSumOfMetrics += weight * evaluateDatum(
+      var evaluatedComponenets = evaluateDatum(
         datum,
         components,
         verbose
       );
-      sumOfWeights += criterion["weight"];
+
+      if (evaluatedComponenets !== null){
+        weightedSumOfMetrics += weight * evaluatedComponenets;
+        sumOfWeights += criterion["weight"];
+      }
+
     } else if (
       "metric" in criterion &&
       "invert" in criterion &&
@@ -168,7 +173,7 @@ function evaluateDatum(datum, criteria, verbose=false) {
       const rawValue = accessValue(datum, metric);
 
       // If the metric value is unavailable, ignore this metric and weighting
-      if (!_.isUndefined(rawValue)) {
+      if (!_.isUndefined(rawValue) && rawValue !== null) {
         const normedValue = getNormalizedValue(rawValue, distribution);
         const metricValue = invert ? 1-normedValue : normedValue;
 
@@ -183,7 +188,9 @@ function evaluateDatum(datum, criteria, verbose=false) {
   });
 
   // Divide out sum by the acumulated weights
-  if (sumOfWeights === 0) return 0;
+  if (sumOfWeights === 0) {
+    return null;
+  }
   return weightedSumOfMetrics / sumOfWeights;
 }
 
@@ -222,6 +229,10 @@ function accessValue(datum, keys, verbose=false) {
     return undefined;
   }
   else if (keys.length > 1) return accessValue(datum[key], keys.slice(1));
+  //If the data isn't available, return null.
+  else if (datum[key] === "Not Available"){
+    return null;
+  }
   else if(isNaN(datum[key].replace(/[^0-9\.]+/g, ""))) {
     if (verbose) console.warn("ERROR: value '", datum[key], "' cannot be parsed to a number.");
     return undefined;
@@ -329,7 +340,6 @@ var DonutChart = function (target, datum, criteria) {
   g.each(function(d){
      // d.data is actually a criterion
       d.normedValue = evaluateDatum(datum, [d.data]);
-
       // Convert the normedValue to an area and calculate the corresponding
       // outer radius
       const maxArea = Math.pow(maxRadius, 2) - Math.pow(minRadius, 2);
@@ -352,7 +362,11 @@ var DonutChart = function (target, datum, criteria) {
 
   g.append("path")
     .attr("d", bkgArc)
-    .style("fill", (d, i) =>  DONUT_COLORS[i])
+    .style("fill", function(d, i) {
+      d.arcColor = DONUT_COLORS[i];
+      if (d.normedValue === null) return "#999999";
+      return d.arcColor;
+    })
     .style('opacity', 0.2)
     .attr("id", d => d.data.name + "bkg")
     .attr("class", "bkgArc staticRad")
@@ -370,9 +384,9 @@ var DonutChart = function (target, datum, criteria) {
       var c = labelArc.centroid(d);
       const translate = "translate(" + c[0] +"," + c[1] + ")";
       const rotateAngle = ((d.startAngle + d.endAngle)/2 - Math.PI/2) * (180/Math.PI);
-      const rotate = "rotate("  + rotateAngle +  ")"; 
+      const rotate = "rotate("  + rotateAngle +  ")";
       //This is to make sure the text on the left side of the donut
-      //Is right side up. 
+      //Is right side up.
       const additionalRotate = rotateAngle >= 90 ? "rotate(180)" : "" ;
       return  translate + " " + rotate + " " + additionalRotate;
     })
@@ -390,13 +404,18 @@ var DonutChart = function (target, datum, criteria) {
     .attr("class", "metricLabel")
     .style("visibility", d => (d.value === 0 ? "hidden" : "visibile"));
 
+
+  const evalScore = evaluateDatum(datum, criteria);
+  const starRating = evalScore === null ? "--" : d3.round(evalScore*5, 2) + " / 5";
+
+
   viz.append("text")
     .attr("class", "stars")
     .attr("x", 0) //centered w/ transform
     .attr("y", 0) //center w/ transform
     .attr("font-size", "30px")
     .attr("text-anchor", "middle")
-    .text(d3.round(evaluateDatum(datum, criteria)*5, 2) + " / 5")// convert to weighted "star" rating
+    .text(starRating)// convert to weighted "star" rating
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
@@ -572,8 +591,10 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
     d.normedValue = evaluateDatum(this.datum, [d.data]);
     d.newOuter = radiusScale(d.normedValue);
 
-    score += d.data.weight * d.normedValue;
-    sumOfWeights += +d.data.weight;
+    if(d.normedValue !== null) {
+      score += d.data.weight * d.normedValue;
+      sumOfWeights += +d.data.weight;
+    }
 
     //reset everything but the start and end angles
     d.newStart = newPieData[i].startAngle;
@@ -599,24 +620,39 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
     });
 
   //These are arcs where we don't need to update the radius, just the start and end angle
-  const staticRadArcs = criteriaGroups.selectAll(".staticRad");
+  const bkgArcs = criteriaGroups.selectAll(".bkgArc");
 
-  staticRadArcs.transition()
+  bkgArcs.style("fill", function(d, i) {
+    if (d.normedValue === null) return "#999999";
+    return d.arcColor;
+  })
+  .transition()
+  .duration(1000)
+  .attrTween("d", function(d, i) {
+    var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
+    var interpolateStart = d3.interpolate(d.startAngle, d.newStart);
+    return function(t) {
+        d.endAngle = interpolateEnd(t);
+        d.startAngle = interpolateStart(t);
+        return bkgArc(d);
+    };
+  });
+
+  const natAvgArcs = criteriaGroups.selectAll(".natAvgLine");
+
+  natAvgArcs.transition()
     .duration(1000)
     .attrTween("d", function(d,i) {
-      const isBkgArc = this.classList.contains("bkgArc");
       var interpolateEnd = d3.interpolate(d.endAngle, d.newEnd);
       var interpolateStart = d3.interpolate(d.startAngle,d.newStart);
       return function(t) {
           d.endAngle = interpolateEnd(t);
           d.startAngle = interpolateStart(t);
-          return isBkgArc ? bkgArc(d) : natAvgArc(d);
+          return natAvgArc(d);
       };
     });
 
   criteriaGroups.selectAll(".metricLabel")
-    // .transition()
-    // .duration(1000)
     .attr("transform", "")
     .attr("transform", function(d) {
       //this is where I want to make a translation to the outside border
@@ -624,9 +660,9 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
       const c = labelArc.centroid(arcData);
       const translate = "translate(" + c[0] +"," + c[1] + ")";
       const rotateAngle = ((d.newStart + d.newEnd)/2 - Math.PI/2) * (180/Math.PI);
-      const rotate = "rotate("  + rotateAngle +  ")"; 
+      const rotate = "rotate("  + rotateAngle +  ")";
       //This is to make sure the text on the left side of the donut
-      //Is right side up. 
+      //Is right side up.
       const additionalRotate = rotateAngle >= 90 ? "rotate(180)" : "" ;
       return  translate + " " + rotate + " " + additionalRotate;
     })
@@ -645,9 +681,9 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
       return arcAngle <= 0.01 ? "hidden" : "visible";
     });
 
-  const starRating = d3.round((sumOfWeights ? score/sumOfWeights : 0) * 5, 2);
+  const starRating = sumOfWeights === 0 ? "--" : d3.round((score/sumOfWeights) * 5, 2) + " / 5";
   viz.selectAll(".stars")
-    .text(starRating + " / 5")
+    .text(starRating)
     .append("tspan")
     .attr("dy", "1.2em")
     .attr("x", 0)
@@ -657,16 +693,28 @@ DonutChart.prototype.update = function (target, datum={}, criteria=[]) {
 
 }
 
-function updateMapOverlay(criteria){
+function updateMapOverlay(criteria, verbose=false){
 // Update marker color with change in settings/ weights
 
   var markers = d3.selectAll(".marker").selectAll("circle");
 
   markers.each(function(d,i){
     d3.select(this)
-      .attr('fill', d => COLORS(evaluateDatum(d.value,criteria)));
+      .attr('fill', d => getFillColor(d, criteria, verbose));
   });
 
+}
+
+/**
+ * Given a datum and criteria, return a fill color appropriate for those
+ * parameters.
+ * @param  {Object} datum A hospital's data
+ * @param {Object} criteria The criteria on which to rank a hospital
+ * @return {String}   A color hex-code
+ */
+function getFillColor(datum, criteria, verbose=false) {
+  const evaluation = evaluateDatum(datum.value, criteria, verbose);
+  return _.isNull(evaluation) ? "#999999" : COLORS(evaluation);
 }
 
 function bindControls(criteria) {
